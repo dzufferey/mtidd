@@ -1,7 +1,13 @@
+#pragma once
+
 #include <list>
+#include <unordered_set>
+#include <map>
+#include <vector>
 #include <memory>
 #include <functional>
 #include "lattice.h"
+#include "partition.h"
 
 using namespace std;
 
@@ -14,22 +20,64 @@ namespace mtidd
   class idd
   {
   private:
-    // TODO
-    // the variable corresponding to that node
-    // a partition
-    // a reference to the manager
-    // caching the hash value
-    // an unique id
+    // node infomration
+    V* variable;
+    bool is_terminal;
+    T* terminal;
+    partition<idd<V, T, L>> p;
+    // behind the scene
+    IddManager* manager;
+    size_t hash_value; // caching the hash for faster look-up
+
+    void computeHash() {
+      // ...
+    }
+
   public:
-    // use shared_ptr as the idd_manager has ownership of the idds and caches them
-    shared_ptr<idd<V, T, L>> operator!() const;
-    shared_ptr<idd<V, T, L>> operator&&(idd<V, T, L> const& rhs) const;
-    shared_ptr<idd<V, T, L>> operator||(idd<V, T, L> const& rhs) const;
-    bool operator==(idd<V, T, L> const& rhs);
-    bool operator!=(idd<V, T, L> const& rhs) { return !(this == rhs); }
-    bool operator<(idd<V, T, L> const& rhs);
-    T lookup(std::map<V,double> const& point) const;
-    size_t hash() const;
+    //XXX ¬ only make sense for the boolean case
+    /*
+    idd<V, T, L>& operator!() const {
+      // ...
+    }
+    */
+
+    idd<V, T, L>& operator&&(idd<V, T, L> const& rhs) const {
+      //TODO could be compute the hash first, do a lookup, and otherwise create the node
+      // ...
+    }
+
+    idd<V, T, L>& operator||(idd<V, T, L> const& rhs) const {
+      // ...
+    }
+
+    bool structually_equal(idd<V, T, L> const& rhs) {
+      if (hash_value != ths.hash_value) {
+        return false;
+      } else {
+        //TODO iterator and stuff
+        // ...
+      }
+    }
+
+    bool operator==(idd<V, T, L> const& rhs) {
+      return (&this) == (&rhs);
+    }
+
+    bool operator!=(idd<V, T, L> const& rhs) {
+      return (&this) != (&rhs);
+    }
+
+    bool operator<(idd<V, T, L> const& rhs) {
+      // ...
+    }
+
+    T lookup(std::map<V,double> const& point) const {
+      // ...
+    }
+
+    size_t hash() const {
+      return hash_value;
+    }
   }
 
   template< class V, // variable
@@ -38,13 +86,12 @@ namespace mtidd
   class idd_manager
   {
   private:
-    // TODO
-    // cache: hashmap
-    // counter for unique ids
-    // an ordering for the variables
+    unordered_set<idd> cache;
+    map<V, int> ordering_by_variable;
+    vector<V> ordering_by_index;
   public:
-    shared_ptr<idd<V, T, L>> create(V const & variable, T value = L.bottom);
-    shared_ptr<idd<V, T, L>> create(V const & variable, T left_value, double bound, bool closed, T right_value);
+    idd<V, T, L>& create(V const & variable, T value = L.bottom);
+    idd<V, T, L>& create(V const & variable, T left_value, double bound, bool closed, T right_value);
   }
 
 } // end namespace
@@ -58,7 +105,7 @@ namespace std
     typedef size_t result_type;
     result_type operator()(argument_type const& s) const
     {
-      //TODO
+      return s.hash();
     }
   };
 }

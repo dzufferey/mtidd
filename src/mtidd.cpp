@@ -24,20 +24,6 @@
 //TODO what is the open-close semantics of the interval and point solution
 // start from -∞ open goes to +∞ open
 // if a bound is open it neighbor is close and vice-versa, except for the extremities
-typedef struct {
-    int name;
-    IddPartitionEntry_t* partition; // an array of pairs: (number, child) where the number is the lower/upper (?) bound and the child is the right/left 
-    int partition_size
-} IddNode_t;
-
-typedef struct Idd {
-    enum { NODE, TERMINAL } type;
-    union { IddNode_t node; IddTerminal_t terminal; } value;
-    uint32_t hashvalue;
-    uint32_t id;
-    //TODO reference counting to free memory: use C++ shared_ptr<T>
-} Idd_t;
-
 
 //////////////////
 //////////////////
@@ -45,94 +31,12 @@ typedef struct Idd {
 
 //TODO replace the cache by an IDD manager
 
-//TODO replace by
+//TODO Hashing
 // https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
 // https://github.com/scala/scala/blob/v2.12.1/src/library/scala/util/hashing/MurmurHash3.scala (list/product)
-uint32_t iddHashGetHashValue(char *idd_string_rep) {
-    uint32_t h = 0;
-    int pos; /* position in idd_string_rep */
-    for (pos = 0; idd_string_rep[pos] != ’\0’; pos++) {
-        h = (64*h + idd_string_rep[pos]) % MAXHASH;
-    }
-    return h;
-}
-
-typedef struct {
-    uint32_t tag;
-    Idd_t *arg1;
-    Idd_t *arg2;
-    Idd_t *result;
-} cacheentry_t;
-
-int iddCacheInit(int s)
-{
-    iddCacheDestroy();
-    size = s;
-    entries = calloc(sizeof(cacheentry_t), s);
-    return entries ? 1 : 0;
-}
-
-void iddCacheDestroy()
-{
-    free(entries);
-    size = 0;
-    entries = NULL;
-}
-
-cacheentry_t *iddCacheLookup(unsigned int hash)
-{
-    return &entries[hash % size];
-}
 
 //////////////////
 //////////////////
-//////////////////
-
-Idd_t *iddOperatorDeepClone(Idd_t *idd, IddHash_t *hashtable) {
-    Idd_t *result;
-    result = iddOperatorDeepCloneHelper(hashtable, idd);
-    return result;
-}
-
-Idd_t *iddOperatorDeepCloneHelper(IddHash_t *hashtable, Idd_t *idd) {
-    Idd_t *result;
-    int i;
-    IddPartitionEntry_t *partition;
-    int partition_size;
-    cacheentry_t *entry;
-    if (idd->type == TERMINAL) {
-        if (idd->value.terminal == TRUE) {
-            result = iddMakeTerminal(hashtable, TRUE);
-            return result;
-        } else {
-            result = iddMakeTerminal(hashtable, FALSE);
-            return result;
-        }
-    } else if (idd->type == NODE) {
-        entry = iddCacheLookup(HASH1(idd->hashvalue));
-        if (entry->tag == opcounter+1 && entry->arg1 == idd) {
-            //printf("iddOperatorDeepCloneHelper: match found in operator cache\n");
-            return entry->result;
-        }
-        partition = iddPartitionAlloc(idd->value.node.partition_size);
-        partition_size = idd->value.node.partition_size;
-        for (i = 0; i < idd->value.node.partition_size; i++) {
-            //printf("iddOperatorDeepCloneHelper: i = %d\n", i);
-            partition[i].lower_bound = idd->value.node.partition[i].lower_bound;
-            partition[i].upper_bound = idd->value.node.partition[i].upper_bound;
-            partition[i].idd = iddOperatorDeepCloneHelper(hashtable,
-                    idd->value.node.partition[i].idd);
-        }
-        result = iddMakeNode(hashtable, idd->value.node.name,
-                partition, partition_size);
-        entry->tag = opcounter+1;
-        entry->arg1 = idd;
-        entry->result = result;
-        return result;
-    }
-    return result;
-}
-
 //////////////////
 
 Idd_t *iddNot(Idd_t *idd) {
@@ -297,41 +201,6 @@ Idd_t *iddAndHelper(IddHash_t *hashtable, Idd_t *a_idd, Idd_t *b_idd) {
         }
     }
     return result;
-}
-
-//////////////////
-
-/* Registers all nodes and terminals in the idd */
-void iddRegister(Idd_t *idd) {
-    int i;
-    if (idd->marked) {
-        return;
-    }
-    idd->marked = 1;
-    iddarray[array_used] = idd;
-    array_used++;
-    if (array_used >= IDD_ARRAY_SIZE) {
-        printf("iddRegister out of memory");
-        exit(0);
-    }
-    if (idd->type == NODE) {
-        for (i = 0; i < idd->value.node.partition_size; i++) {
-            iddRegister(idd->value.node.partition[i].idd);
-        }
-    }
-}
-
-void iddDeepFree(Idd_t *idd) {
-    int i;
-    array_used = 0;
-    iddRegister(idd);
-    /* free list of unique idds */
-    for (i = 0; i < array_used; i++) {
-        if (iddarray[i]->type == NODE) {
-            iddPartitionFree(iddarray[i]->value.node.partition);
-        }
-        iddFree(iddarray[i]);
-    }
 }
 
 ////////////////////////////////////////////
