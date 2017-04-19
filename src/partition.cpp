@@ -28,4 +28,16 @@ namespace mtidd
                get<1>(rhs) == Closed );
   }
 
+  bool contains(const half_interval& end, double value) {
+    double v = get<0>(end);
+    return value < v || (value == v && get<1>(end) == Closed);
+  }
+
+  const half_interval& min(const half_interval& lhs, const half_interval& rhs) {
+    return ends_before(lhs, rhs) ? lhs : rhs;
+  }
+
+  half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
+  half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
+
 }

@@ -21,10 +21,10 @@ namespace mtidd
   {
   private:
     // node infomration
-    V* variable;
     bool is_terminal;
+    V* variable;
     T* terminal;
-    partition<idd<V, T, L>> p;
+    partition<idd<V, T, L>> part;
     // behind the scene
     IddManager* manager;
     size_t hash_value; // caching the hash for faster look-up
@@ -34,12 +34,18 @@ namespace mtidd
     }
 
   public:
-    //XXX ¬ only make sense for the boolean case
     /*
     idd<V, T, L>& operator!() const {
-      // ...
+      //XXX ¬ only make sense for the boolean case
     }
     */
+
+    // TODO access the variable ordering in the manager?
+
+    // make sure the copy constructor is not called implicitly
+    explicit idd(const idd<V, T, L>& that) {
+      // XXX
+    }
 
     idd<V, T, L>& operator&&(idd<V, T, L> const& rhs) const {
       //TODO could be compute the hash first, do a lookup, and otherwise create the node
@@ -50,20 +56,25 @@ namespace mtidd
       // ...
     }
 
+    // only one step local, assume decendant are internalized in the manager
     bool structually_equal(idd<V, T, L> const& rhs) {
-      if (hash_value != ths.hash_value) {
-        return false;
-      } else {
-        //TODO iterator and stuff
-        // ...
-      }
+      // only compare IDD from the same manager!
+      assert(manager == rhs.manager);
+
+      return hash_value != rhs.hash_value && (
+               ( is_terminal &&  rhs.is_terminal && terminal == rhs.terminal) ||
+               (!is_terminal && !rhs.is_terminal && variable == rhs.variable && part = rhs.part)
+             );
     }
 
+    // assume the IDDs are internalized so equal means are the object
     bool operator==(idd<V, T, L> const& rhs) {
+      assert(manager == rhs.manager);
       return (&this) == (&rhs);
     }
 
     bool operator!=(idd<V, T, L> const& rhs) {
+      assert(manager == rhs.manager);
       return (&this) != (&rhs);
     }
 
@@ -90,6 +101,9 @@ namespace mtidd
     map<V, int> ordering_by_variable;
     vector<V> ordering_by_index;
   public:
+    int compare(V const & v1, V const & v2) {
+      return ordering_by_variable[v1] - ordering_by_variable[v2];
+    }
     idd<V, T, L>& create(V const & variable, T value = L.bottom);
     idd<V, T, L>& create(V const & variable, T left_value, double bound, bool closed, T right_value);
   }
