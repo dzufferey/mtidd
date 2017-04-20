@@ -34,8 +34,8 @@ namespace mtidd
   const half_interval& min(const half_interval& lhs, const half_interval& rhs);
 
   // sentinel nodes
-  half_interval lower_sentinel;
-  half_interval upper_sentinel;
+  constexpr half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
+  constexpr half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
 
   // a partition is just an alias for a list of boundaries
   template<class A>
@@ -45,14 +45,13 @@ namespace mtidd
   partition<A> new_partition(A* default_value) {
     partition<A> boundaries;
     boundaries.emplace_back(upper_sentinel, default_value);
-    //boundaries.push_back(make_tuple<half_interval, A*>(upper_sentinel, default_value)); //TODO emplace?
     return boundaries;
   }
 
   // insert an interval into a partition
   template<class A>
-  void insert(partition<A>& boundaries, interval& const i, A* value) {
-    auto new_start = make_tuple<double, interval_boundary>(get<0>(i), get<1>(i));
+  void insert(partition<A>& boundaries, interval const& i, A* value) {
+    half_interval new_start = make_tuple(get<0>(i), get<1>(i));
     auto iterator = boundaries.begin();
     // find where to start
     while ( ends_before(get<0>(*iterator), new_start) ) {
@@ -64,13 +63,12 @@ namespace mtidd
     // overlap && old_value != new_value
     if ( overlap && get<1>(*iterator) != value ) {
        // insert new stop with value of old_stop
-       auto complement_of_new = make_tuple<double, interval_boundary>(get<0>(new_start), complement(get<1>(new_start)));
+       half_interval complement_of_new = make_tuple(get<0>(new_start), complement(get<1>(new_start)));
        boundaries.emplace(iterator, complement_of_new, get<1>(*iterator));
-       //boundaries.insert(iterator, make_tuple<half_interval, A*>(complement_of_new, get<1>(iterator*))); //TODO emplace ?
     }
     ++iterator;
     // find where to stop
-    auto new_stop = make_tuple<double, interval_boundary>(get<2>(i), get<3>(i));
+    half_interval new_stop = make_tuple(get<2>(i), get<3>(i));
     while ( get<0>(*iterator) <= new_stop && iterator != boundaries.end() ) {
       auto to_remove = iterator;
       ++iterator;
@@ -79,7 +77,6 @@ namespace mtidd
     // insert new boundary if needed
     if ( iterator == boundaries.end() || get<1>(*iterator) != value ) {
       boundaries.insert(iterator, new_stop, value);
-      //boundaries.insert(iterator, make_tuple<half_interval, A*>(new_stop, value)); //TODO emplace ?
     }
   }
 
@@ -88,7 +85,7 @@ namespace mtidd
   template<class A>
   void merge(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, A* (*merge_elements)(A*,  A*)) {
 
-    A* previous_value = null_ptr;
+    A* previous_value = nullptr;
     result.clear();
 
     auto iterator_lhs = lhs.begin();
@@ -105,7 +102,7 @@ namespace mtidd
 
       const half_interval& next = min(next_lhs, next_rhs);
       A* next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_lhs));
-      assert(next_value != null_ptr);
+      assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
       if (next_value == previous_value) {
@@ -114,7 +111,6 @@ namespace mtidd
       previous_value = next_value;
 
       result.emplace_back(next, next_value);
-      //result.push_back(make_tuple<half_interval, A*>(next, next_value)); //TODO emplace?
 
       if (next == next_lhs) {
         iterator_lhs++;
@@ -127,7 +123,7 @@ namespace mtidd
 
   template<class A>
   A* lookup(partition<A>& boundaries, double value) {
-    A* result = null_ptr;
+    A* result = nullptr;
     auto iterator = boundaries.begin();
     do {
       result = get<1>(*iterator);

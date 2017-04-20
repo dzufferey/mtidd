@@ -1,11 +1,14 @@
 #pragma once
 
+#include <cstddef>
 
 namespace mtidd
 {
 
   // comparison in a partial ordering
   typedef enum { Equal, Smaller, Greater, Different} lattice_compare;
+
+  //TODO could we sue concept to get rid of the virtual part
 
   // struct that contains the methods to
   template<typename T>
@@ -19,6 +22,7 @@ namespace mtidd
 
     virtual lattice_compare compare(const T&, const T&) const = 0;
     virtual bool equal(const T&, const T&) const = 0;
+    virtual size_t hash(const T&) const = 0;
   };
 
 
@@ -33,6 +37,7 @@ namespace mtidd
     bool greatest_lower_bound(const bool& x, const bool& y) const;
     lattice_compare compare(const bool& x, const bool& y) const;
     bool equal(const bool& x, const bool& y) const;
+    size_t hash(const bool& x) const;
   };
 
   class integer_lattice: lattice<int> {
@@ -43,6 +48,7 @@ namespace mtidd
     int greatest_lower_bound(const int& x, const int& y) const;
     lattice_compare compare(const int& x, const int& y) const;
     bool equal(const int& x, const int& y) const;
+    size_t hash(const int& x) const;
   };
 
   class long_lattice: lattice<long> {
@@ -53,6 +59,7 @@ namespace mtidd
     long greatest_lower_bound(const long& x, const long& y) const;
     lattice_compare compare(const long& x, const long& y) const;
     bool equal(const long& x, const long& y) const;
+    size_t hash(const long& x) const;
   };
 
   class float_lattice: lattice<float> {
@@ -63,6 +70,7 @@ namespace mtidd
     float greatest_lower_bound(const float& x, const float& y) const;
     lattice_compare compare(const float& x, const float& y) const;
     bool equal(const float& x, const float& y) const;
+    size_t hash(const float& x) const;
   };
 
   class double_lattice: lattice<double> {
@@ -73,6 +81,7 @@ namespace mtidd
     double greatest_lower_bound(const double& x, const double& y) const;
     lattice_compare compare(const double& x, const double& y) const;
     bool equal(const double& x, const double& y) const;
+    size_t hash(const double& x) const;
   };
 
   // TODO an example for set<T>

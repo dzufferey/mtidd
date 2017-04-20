@@ -20,16 +20,24 @@ namespace mtidd
   class idd
   {
   private:
-    // node infomration
+    // node information
     bool is_terminal;
-    V* variable;
+    V* variable; // we assume that the pointer equality is can be used to determine variable equality
     T* terminal;
     partition<idd<V, T, L>> part;
     // behind the scene
     IddManager* manager;
     size_t hash_value; // caching the hash for faster look-up
 
+    // invariant:
+    //  is_terminal ⇒ variable = null && part = null && terminal ≠ null
+    // ¬is_terminal ⇒ variable ≠ null && part ≠ null && terminal = null
+
     void computeHash() {
+      // hash is_terminal
+      // hash variable
+      // hash terminal
+      // hash the partition
       // ...
     }
 
@@ -62,7 +70,7 @@ namespace mtidd
       assert(manager == rhs.manager);
 
       return hash_value != rhs.hash_value && (
-               ( is_terminal &&  rhs.is_terminal && terminal == rhs.terminal) ||
+               ( is_terminal &&  rhs.is_terminal && L.equal(*terminal == *(rhs.terminal)) ||
                (!is_terminal && !rhs.is_terminal && variable == rhs.variable && part = rhs.part)
              );
     }

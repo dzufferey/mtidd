@@ -2,10 +2,44 @@
 
 #include <limits>
 #include <algorithm>
+#include <cstdint>
 
 namespace mtidd
 {
   
+  inline uint64_t rotl64 ( uint64_t x, int8_t r )
+  {
+        return (x << r) | (x >> (64 - r));
+  }
+
+  size_t mhash(const long x) {
+    //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
+    static_assert( sizeof(size_t) == 8 );
+    static_assert( sizeof(long) == 8 );
+
+    size_t h1 = 0x3141592653589793; // seed
+    const uint64_t c1 = 0x87c37b91114253d5;
+    const uint64_t c2 = 0x4cf5ad432745937f;
+
+    size_t k1 = x;
+    k1 *= c1;
+    k1 = rotl64(k1,31);
+    k1 *= c2;
+    h1 ^= k1;
+    h1 = rotl64(h1,27);
+    h1 = h1*5+0x52dce729;
+
+    h1 ^= 8;
+
+    h1 ^= h1 >> 33;
+    h1 *= 0xff51afd7ed558ccd;
+    h1 ^= h1 >> 33;
+    h1 *= 0xc4ceb9fe1a85ec53;
+    h1 ^= h1 >> 33;
+
+    return h1;
+  }
+
   bool boolean_lattice::bottom() const { return false; }
   bool boolean_lattice::top() const { return true; }
 
@@ -29,6 +63,11 @@ namespace mtidd
 
   bool boolean_lattice::equal(const bool& x, const bool& y) const {
     return x == y;
+  }
+
+  // not great but good enough
+  size_t boolean_lattice::hash(const bool& x) const {
+    return static_cast<size_t>(x);
   }
 
   int integer_lattice::bottom() const {
@@ -60,7 +99,11 @@ namespace mtidd
   bool integer_lattice::equal(const int& x, const int& y) const {
     return x == y;
   }
-  
+
+  size_t integer_lattice::hash(const int& x) const {
+    return mhash(x);
+  }
+
   long long_lattice::bottom() const {
     return std::numeric_limits<long>::min();
   }
@@ -89,6 +132,11 @@ namespace mtidd
 
   bool long_lattice::equal(const long& x, const long& y) const {
     return x == y;
+  }
+
+  size_t long_lattice::hash(const long& x) const {
+    static_assert( sizeof(long) == 8 );
+    return mhash(x);
   }
 
   float float_lattice::bottom() const {
@@ -121,6 +169,14 @@ namespace mtidd
     return x == y;
   }
 
+  // not great but good enough
+  size_t float_lattice::hash(const float& x) const {
+    double d = x;
+    static_assert(sizeof(double) == sizeof(long));
+    long l = *(reinterpret_cast<long*>(&d));
+    return mhash(l);
+  }
+
   double double_lattice::bottom() const {
     return std::numeric_limits<double>::min();
   }
@@ -149,6 +205,12 @@ namespace mtidd
 
   bool double_lattice::equal(const double& x, const double& y) const {
     return x == y;
+  }
+
+  size_t double_lattice::hash(const double& x) const {
+    static_assert( sizeof(double) == 8 );
+    long l = *(reinterpret_cast<const long*>(&x));
+    return mhash(l);
   }
 
 } // end namespace

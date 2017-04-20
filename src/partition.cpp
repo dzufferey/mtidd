@@ -6,7 +6,7 @@ namespace mtidd
 {
   
   interval_boundary complement(interval_boundary b) {
-    return v == Open ? Closed : Open;
+    return b == Open ? Closed : Open;
   }
 
   // lhs is the right/end of an interval
@@ -25,7 +25,8 @@ namespace mtidd
     return left < right ||
            ( left == right &&
              ( get<1>(lhs) == get<1>(rhs) ||
-               get<1>(rhs) == Closed );
+               get<1>(rhs) == Closed )
+           );
   }
 
   bool contains(const half_interval& end, double value) {
@@ -37,7 +38,5 @@ namespace mtidd
     return ends_before(lhs, rhs) ? lhs : rhs;
   }
 
-  half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
-  half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
 
 }
