@@ -2,8 +2,8 @@
 
 #include <list>
 #include <tuple>
-#include <limits>
 #include <iterator>
+#include "interval.h"
 
 // TODO represent partitions with DLL of open/closed boundaries over double
 
@@ -12,30 +12,9 @@ using namespace std;
 namespace mtidd
 {
 
-  typedef enum { Open, Closed } interval_boundary;
-
-  interval_boundary complement(interval_boundary b);
-
-  typedef tuple<double,interval_boundary> half_interval;
-
-  // lhs is the right/end of an interval
-  // rhs is the left/start of an interval
-  bool ends_before(const half_interval& lhs, const half_interval& rhs);
-
-  // lhs and rhs are the right/end of an interval
-  bool operator<=(const half_interval& lhs, const half_interval& rhs);
-
-  bool contains(const half_interval& end, double value);
-
-  typedef tuple<double,interval_boundary,double,interval_boundary> interval;
-
-  // lhs is the right/end of an interval
-  // rhs is the left/start of an interval
-  const half_interval& min(const half_interval& lhs, const half_interval& rhs);
-
-  // sentinel nodes
-  constexpr half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
-  constexpr half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
+  ///////////////
+  // partition //
+  ///////////////
 
   // a partition is just an alias for a list of boundaries
   template<class A>

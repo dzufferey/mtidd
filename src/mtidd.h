@@ -21,7 +21,6 @@ namespace mtidd
   {
   private:
     // node information
-    bool is_terminal;
     V* variable; // we assume that the pointer equality is can be used to determine variable equality
     T* terminal;
     partition<idd<V, T, L>> part;
@@ -30,11 +29,10 @@ namespace mtidd
     size_t hash_value; // caching the hash for faster look-up
 
     // invariant:
-    //  is_terminal ⇒ variable = null && part = null && terminal ≠ null
-    // ¬is_terminal ⇒ variable ≠ null && part ≠ null && terminal = null
+    // variable = null ⇒ part = null && terminal ≠ null
+    // variable ≠ null ⇒ part ≠ null && terminal = null
 
     void computeHash() {
-      // hash is_terminal
       // hash variable
       // hash terminal
       // hash the partition
@@ -47,16 +45,56 @@ namespace mtidd
       //XXX ¬ only make sense for the boolean case
     }
     */
+    
+    idd(IddManager* mngr, T* value): variable(nullptr), terminal(value), part(nullptr), manager(mngr) {
+      computeHash();
+    }
 
-    // TODO access the variable ordering in the manager?
+    // TODO constructor with default value (terminal) and box (map v -> interval)
+    idd(IddManager* mngr, std::map<V,interval> const& box, T* inside_value, T* outside_value) {
+      manager = mngr;
+      if (box.empty) {
+        variable = nullptr;
+        terminal = inside_value;
+        part = nullptr;
+      } else {
+        terminal = nullptr;
+        // XXX find the first variable (manager order) in the box range
+      }
+      computeHash();
+    }
 
     // make sure the copy constructor is not called implicitly
     explicit idd(const idd<V, T, L>& that) {
       // XXX
     }
 
+    bool is_terminal {
+      return variable == nullptr
+    }
+
     idd<V, T, L>& operator&&(idd<V, T, L> const& rhs) const {
+      assert(manager == rhs.manager);
+
       //TODO could be compute the hash first, do a lookup, and otherwise create the node
+      if (is_terminal() || rhs.is_terminal()) {
+        if (is_terminal() && rhs.is_terminal()) {
+          // ...
+        } else if (is_terminal()) {
+          // ...
+        } else {
+          return rhs && this;
+        }
+      } else {
+        int delta_v = manager.compare(*variable, *(that.variable));
+        if (delta_v < 0) {
+          // ...
+        } else if (delta_v > 0) {
+          // ...
+        } else {
+          // ...
+        }
+      }
       // ...
     }
 
@@ -65,18 +103,18 @@ namespace mtidd
     }
 
     // only one step local, assume decendant are internalized in the manager
-    bool structually_equal(idd<V, T, L> const& rhs) {
+    bool operator==(idd<V, T, L> const& rhs) {
       // only compare IDD from the same manager!
       assert(manager == rhs.manager);
 
       return hash_value != rhs.hash_value && (
-               ( is_terminal &&  rhs.is_terminal && L.equal(*terminal == *(rhs.terminal)) ||
-               (!is_terminal && !rhs.is_terminal && variable == rhs.variable && part = rhs.part)
+               ( is_terminal() &&  rhs.is_terminal() && L.equal(*terminal == *(rhs.terminal)) ||
+               (!is_terminal() && !rhs.is_terminal() && variable == rhs.variable && part = rhs.part)
              );
     }
 
     // assume the IDDs are internalized so equal means are the object
-    bool operator==(idd<V, T, L> const& rhs) {
+    bool compare_internalized(idd<V, T, L> const& rhs) {
       assert(manager == rhs.manager);
       return (&this) == (&rhs);
     }
