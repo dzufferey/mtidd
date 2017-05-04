@@ -5,16 +5,12 @@
 #include <iterator>
 #include "interval.h"
 
-// TODO represent partitions with DLL of open/closed boundaries over double
+// represent partitions with DLL of open/closed boundaries over double
 
 using namespace std;
 
 namespace mtidd
 {
-
-  ///////////////
-  // partition //
-  ///////////////
 
   // a partition is just an alias for a list of boundaries
   template<class A>
@@ -58,11 +54,33 @@ namespace mtidd
       boundaries.insert(iterator, new_stop, value);
     }
   }
+  
+  template<class A>
+  void map_partition(partition<A>& result, partition<A> const& arg, A* (*map_element)(A*)) {
+    A* previous_value = nullptr;
+    result.clear();
+    auto iterator = arg.begin();
+    while (iterator != arg.end()){
+
+      const half_interval& next = get<0>(*iterator);
+      A* next_value = map_elements(get<1>(*iterator));
+      assert(next_value != nullptr);
+
+      // merge previous and next if they point to the same value
+      if (next_value == previous_value) {
+        result.pop_back();
+      }
+      previous_value = next_value;
+
+      result.emplace_back(next, next_value);
+      iterator++;
+    }
+  }
 
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, A* (*merge_elements)(A*,  A*)) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, A* (*merge_elements)(A*,  A*)) {
 
     A* previous_value = nullptr;
     result.clear();

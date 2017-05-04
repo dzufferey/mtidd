@@ -11,7 +11,6 @@
 //what about simplification: remove the too small intervals (threashold) to shrink the IDD (lossy operation, hot to control the loss ?)
 
 //Operation on the idds
-//- not / !
 //- union / +
 //- intersection / *
 //- T lookup(std::map<V,double> point)
@@ -20,16 +19,9 @@
 
 //- ...
 
-// Since we are looking at C++, we should make those structures be classes
-//TODO what is the open-close semantics of the interval and point solution
-// start from -∞ open goes to +∞ open
-// if a bound is open it neighbor is close and vice-versa, except for the extremities
-
 //////////////////
 //////////////////
 //////////////////
-
-//TODO replace the cache by an IDD manager
 
 //TODO Hashing
 // https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
@@ -37,61 +29,6 @@
 
 //////////////////
 //////////////////
-//////////////////
-
-Idd_t *iddNot(Idd_t *idd) {
-    IddHash_t hashtable;
-    Idd_t *result;
-    opcounter++;
-    iddHashInit(&hashtable, IDDHASHTBLSIZE);
-    result = iddNotHelper(&hashtable, idd);
-    iddHashFree(&hashtable);
-    return result;
-}
-
-Idd_t *iddNotHelper(IddHash_t *hashtable, Idd_t *idd) {
-    Idd_t *result = NULL;
-    int i;
-    IddPartitionEntry_t *partition;
-    int partition_size;
-    cacheentry_t *entry;
-    /* If idd is a terminal just return the opposite */
-    if (idd->type == TERMINAL) {
-        if (idd->value.terminal == TRUE) {
-            result = iddMakeTerminal(hashtable, FALSE);
-        } else {
-            result = iddMakeTerminal(hashtable, TRUE);
-        }
-        printf("iddNotHelper: DANGER! We shouldn’t get here.\n");
-    } else if (idd->type == NODE) {
-        entry = iddCacheLookup(HASH1(idd->hashvalue));
-        if (entry->tag == opcounter && entry->arg1 == idd) {
-            return entry->result;
-        }
-        partition = iddPartitionAlloc(idd->value.node.partition_size);
-        partition_size = idd->value.node.partition_size;
-        if(partition_size < 1) {
-            printf("iddNotHelper: partition_size less than 1, exiting\n");
-            exit(0);
-        }
-        for (i = 0; i < idd->value.node.partition_size; i++) {
-            //printf("iddNotHelper: i = %d\n", i);
-            partition[i].lower_bound = idd->value.node.partition[i].lower_bound;
-            partition[i].upper_bound = idd->value.node.partition[i].upper_bound;
-            partition[i].idd = iddNotHelper(hashtable,
-                    idd->value.node.partition[i].idd);
-        }
-        result = iddMakeNode(hashtable,
-                idd->value.node.name,
-                partition,
-                partition_size);
-        entry->tag = opcounter;
-        entry->arg1 = idd;
-        entry->result = result;
-    }
-    return result;
-}
-
 //////////////////
 
 Idd_t *iddAnd(Idd_t *a_idd, Idd_t *b_idd) {

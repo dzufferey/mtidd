@@ -8,7 +8,7 @@ namespace mtidd
   // comparison in a partial ordering
   typedef enum { Equal, Smaller, Greater, Different} lattice_compare;
 
-  //TODO could we sue concept to get rid of the virtual part
+  //TODO could we use concept to get rid of the virtual part
 
   // struct that contains the methods to
   template<typename T>
