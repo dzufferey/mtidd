@@ -39,9 +39,8 @@ namespace mtidd
       // ...
     }
     
-    idd<V, T, L>& traverse(idd<V, T, L> const& rhs, bool lub) const {
+    idd<V, T, L> const & traverse(idd<V, T, L> const& rhs, bool lub) const {
       assert(manager == rhs.manager);
-      //TODO could be compute the hash first, do a lookup, and otherwise create the node
       if (is_terminal()) {
         if (rhs.is_terminal()) {
           if (lub) {
@@ -96,22 +95,8 @@ namespace mtidd
       computeHash();
     }
 
-    idd(IddManager* mngr, V* var, T* default_value): variable(var), terminal(nullptr), part(new_partition(default_value)), manager(mngr) {
-      computeHash();
-    }
-
-
-    // TODO constructor with default value (terminal) and box (map v -> interval)
-    idd(IddManager* mngr, std::map<V,interval> const& box, T* inside_value, T* outside_value) {
-      manager = mngr;
-      if (box.empty) {
-        variable = nullptr;
-        terminal = inside_value;
-        part = nullptr;
-      } else {
-        terminal = nullptr;
-        // XXX find the first variable (manager order) in the box range
-      }
+    idd(IddManager* mngr, V* var, const interval & i, const idd<V, T, L> & in, const idd<V, T, L> & out): variable(var), terminal(nullptr), part(new_partition(&out)), manager(mngr) {
+      insert_partition(part, i, &in);
       computeHash();
     }
 
@@ -124,11 +109,11 @@ namespace mtidd
       return variable == nullptr
     }
 
-    idd<V, T, L>& operator&&(idd<V, T, L> const& rhs) const {
+    idd<V, T, L> const & operator&&(const idd<V, T, L> & rhs) const {
       return traverse(rhs, true);
     }
 
-    idd<V, T, L>& operator||(idd<V, T, L> const& rhs) const {
+    idd<V, T, L> const & operator||(const idd<V, T, L> & rhs) const {
       return traverse(rhs, false);
     }
 
@@ -155,11 +140,11 @@ namespace mtidd
     }
 
     bool operator<(idd<V, T, L> const& rhs) {
-      // ...
+      // XXX
     }
 
     T lookup(std::map<V,double> const& point) const {
-      // ...
+      // XXX
     }
 
     size_t hash() const {
@@ -175,12 +160,53 @@ namespace mtidd
   private:
     unordered_set<idd> cache;
     map<V, int> ordering_by_variable;
-    vector<V> ordering_by_index;
+    vector<V> ordering_by_index; // XXX duplication of V in the vector or the map which one should prevail ?
   public:
+
     int compare(V const & v1, V const & v2) {
       return ordering_by_variable[v1] - ordering_by_variable[v2];
     }
-    idd<V, T, L>& internalize(*idd<V, T, L> i);
+
+    V* with_index(int n) {
+      assert(n < number_of_variables() && n >= 0);
+      return &ordering_by_index[n];
+    }
+
+    int number_of_variables() {
+      return ordering_by_index.size();
+    }
+
+    idd<V, T, L> const & internalize(*idd<V, T, L> i) {
+      // TODO ...
+    }
+
+    void releaseBut(idd<V, T, L> const & keep) {
+      // TODO ...
+    }
+
+    // constructs an IDD from a box (map v -> interval), a value, and a default value
+    idd<V, T, L> const & idd(std::map<V,interval> const& box, T* inside_value, T* outside_value) {
+      idd<V, T, L> const & out_part = internalize(new idd<V,T,L>(this, outside_value));
+      idd<V, T, L> const & in_part = internalize(new idd<V,T,L>(this, outside_value));
+      // start from the leaves and work our way up
+      int n = number_of_variables();
+      --n;
+      while(n >= 0) {
+        V& var = ordering_by_index[n];
+        if (box.count(var) > 0) {
+          const interval& i = box[var];
+          if (is_empty(i)) {
+            return out_part;
+          } else {
+            auto dd = new idd<V,T,L>(this, var, i, in_part, out_part);
+            in_part = internalize(dd);
+          }
+        }
+        --n;
+      }
+      return in_part;
+    }
+
   }
 
 } // end namespace

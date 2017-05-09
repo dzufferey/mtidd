@@ -14,10 +14,10 @@ namespace mtidd
 
   // a partition is just an alias for a list of boundaries
   template<class A>
-  using partition = list<tuple<half_interval, A*>>;
+  using partition = list<tuple<half_interval, const A *>>;
 
   template<class A>
-  partition<A> new_partition(A* default_value) {
+  partition<A> new_partition(const A * default_value) {
     partition<A> boundaries;
     boundaries.emplace_back(upper_sentinel, default_value);
     return boundaries;
@@ -25,7 +25,7 @@ namespace mtidd
 
   // insert an interval into a partition
   template<class A>
-  void insert(partition<A>& boundaries, interval const& i, A* value) {
+  void insert_partition(partition<A>& boundaries, interval const& i, const A * value) {
     half_interval new_start = make_tuple(get<0>(i), get<1>(i));
     auto iterator = boundaries.begin();
     // find where to start
@@ -56,14 +56,14 @@ namespace mtidd
   }
   
   template<class A>
-  void map_partition(partition<A>& result, partition<A> const& arg, A* (*map_element)(A*)) {
-    A* previous_value = nullptr;
+  void map_partition(partition<A>& result, partition<A> const& arg, const A * (*map_element)(const A *)) {
+    const A * previous_value = nullptr;
     result.clear();
     auto iterator = arg.begin();
     while (iterator != arg.end()){
 
       const half_interval& next = get<0>(*iterator);
-      A* next_value = map_elements(get<1>(*iterator));
+      A * next_value = map_elements(get<1>(*iterator));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -80,9 +80,9 @@ namespace mtidd
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, A* (*merge_elements)(A*,  A*)) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, const A * (*merge_elements)(const A *,  const A *)) {
 
-    A* previous_value = nullptr;
+    const A * previous_value = nullptr;
     result.clear();
 
     auto iterator_lhs = lhs.begin();
@@ -98,7 +98,7 @@ namespace mtidd
       const half_interval& next_rhs = get<0>(*iterator_rhs);
 
       const half_interval& next = min(next_lhs, next_rhs);
-      A* next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_lhs));
+      A * next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_lhs));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -119,8 +119,8 @@ namespace mtidd
   }
 
   template<class A>
-  A* lookup(partition<A>& boundaries, double value) {
-    A* result = nullptr;
+  const A * lookup(partition<A>& boundaries, double value) {
+    A * result = nullptr;
     auto iterator = boundaries.begin();
     do {
       result = get<1>(*iterator);
