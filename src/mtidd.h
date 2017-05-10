@@ -118,7 +118,7 @@ namespace mtidd
     }
 
     // only one step local, assume decendant are internalized in the manager
-    bool operator==(idd<V, T, L> const& rhs) {
+    bool operator==(idd<V, T, L> const& rhs) const {
       // only compare IDD from the same manager!
       assert(manager == rhs.manager);
 
@@ -155,10 +155,34 @@ namespace mtidd
   template< class V, // variable
             class T, // terminal
             class L = struct lattice<T> >
+  struct idd_hash {
+    size_t operator()(idd<V,T,L> * const s) const
+    {
+      return s->hash();
+    }
+  }
+  
+  template< class V, // variable
+            class T, // terminal
+            class L = struct lattice<T> >
+  struct idd_equalTo {
+    size_t operator()(idd<V,T,L> * const lhs, idd<V,T,L> * const rhs) const
+    {
+      return *lhs == *rhs;
+    }
+  }
+
+
+  template< class V, // variable
+            class T, // terminal
+            class L = struct lattice<T> >
   class idd_manager
   {
   private:
-    unordered_set<idd> cache;
+    typedef unordered_set<idd<V,T,L>*, // keeps pointer around but use the hash and equality of the underlying object
+                  idd_hash<V,T,L>,
+                  idd_equalTo<V,T,L>> cache_t;
+    cache_t cache;
     map<V, int> ordering_by_variable;
     vector<V> ordering_by_index; // XXX duplication of V in the vector or the map which one should prevail ?
   public:
@@ -177,11 +201,22 @@ namespace mtidd
     }
 
     idd<V, T, L> const & internalize(*idd<V, T, L> i) {
-      // TODO ...
+      cache_t::const_iterator found = cache.find(i);
+      if (found == cache.end()) {
+        cache.insert(i);
+        return *i;
+      } else {
+        delete i;
+        return *found;
+      }
     }
 
     void releaseBut(idd<V, T, L> const & keep) {
-      // TODO ...
+      // TODO
+      // traverse keep and get all the pointers
+      // take the difference between the cache and the pointers to keep
+      // free the difference
+      // set the pointers to keep as the new cache
     }
 
     // constructs an IDD from a box (map v -> interval), a value, and a default value
@@ -210,17 +245,3 @@ namespace mtidd
   }
 
 } // end namespace
-
-// custom parial specialization of std::hash
-namespace std
-{
-  template<V, T, L> struct hash<mtidd<V,T,L>>
-  {
-    typedef mtidd<V,T,L> argument_type;
-    typedef size_t result_type;
-    result_type operator()(argument_type const& s) const
-    {
-      return s.hash();
-    }
-  };
-}
