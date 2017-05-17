@@ -119,7 +119,7 @@ namespace mtidd
   }
 
   template<class A>
-  const A * lookup(partition<A>& boundaries, double value) {
+  const A * lookup_partition(partition<A>& boundaries, double value) {
     A * result = nullptr;
     auto iterator = boundaries.begin();
     do {
