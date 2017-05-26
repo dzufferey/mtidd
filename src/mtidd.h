@@ -36,11 +36,31 @@ namespace mtidd
     // variable ≠ null ⇒ part ≠ null && terminal = null
 
     void computeHash() {
-      // TODO
-      // hash variable
-      // hash terminal or terminal_index (depends on the internalizing or not ?)
-      // hash the partition
-      // ...
+      //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
+
+      size_t h1 = 0x3141592653589793; // seed
+      const uint64_t c1 = 0x87c37b91114253d5;
+      const uint64_t c2 = 0x4cf5ad432745937f;
+
+      size_t vi = variable_index;
+      size_t ti = terminal_index;
+      size_t k1 ^= (vi << 32) | ti;
+      k1 *= c1;
+      k1 = rotl64(k1,31);
+      k1 *= c2;
+      h1 ^= k1;
+      h1 = rotl64(h1,27);
+      h1 = h1*5+0x52dce729;
+
+      h1 ^= hash_partition(part, [](*idd<V, T, L> x) { return x->hash(); });
+
+      h1 ^= h1 >> 33;
+      h1 *= 0xff51afd7ed558ccd;
+      h1 ^= h1 >> 33;
+      h1 *= 0xc4ceb9fe1a85ec53;
+      h1 ^= h1 >> 33;
+
+      return h1;
     }
     
     idd<V, T, L> const & traverse(idd<V, T, L> const& rhs, bool lub) const {
