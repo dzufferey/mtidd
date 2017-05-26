@@ -1,6 +1,8 @@
 #pragma once
 
 #include <unordered_map>
+#include <map>
+#include <set>
 #include <vector>
 #include <memory>
 #include <functional>
@@ -20,8 +22,7 @@ namespace mtidd
   {
   private:
     unordered_map<T, int, Hash, Equal> by_value;
-    vector<V> by_index;
-    // XXX duplication of V in the vector or the map which one should prevail ?
+    vector<T> by_index;
   public:
 
     int index(T const & v) {
@@ -46,20 +47,52 @@ namespace mtidd
     }
 
     int internalize(T const & v) {
-      cache_t::const_iterator found = by_value.find(v);
+      auto found = by_value.find(v);
       if (found == by_value.end()) {
         int i = by_index.size();
-        by_index.emplace_back(T);
-        by_value.emplace(T, i);
+        by_index.emplace_back(v);
+        by_value.emplace(v, i);
         return i;
       } else {
-        return *found;
+        return found->second;
       }
     }
 
-    //TODO method to clear some but not all
-    //TODO method to permute the ordering
+    void permute(map<int, int> const & permutation) {
+      // update by_index
+      vector<T> old_indices = by_index; // FIXME twice the memory during this method...
+      by_index.clear();
+      auto n = old_indices.size();
+      by_index.resize(n);
+      for (int i = 0; i < n; ++i) {
+        int new_index = i;
+        if (permutation.count(i) > 0) {
+          new_index = permutation.at(i);
+        }
+        by_index[new_index] = old_indices[i];
+      }
+      // update by_value
+      for (auto it = by_value.begin(); it != by_value.end(); ++it) {
+        int index = it->first;
+        if (permutation.count(index) > 0) {
+          it->second = permutation.at(index);
+        }
+      }
+    }
 
-  }
+    void clear() {
+      by_index.clear();
+      by_value.clear();
+    }
+
+    //this invalidates the indices
+    void clear(set<T> const & values_to_keep) {
+      clear();
+      for (auto it = values_to_keep.begin(); it != values_to_keep.end(); ++it) {
+        internalize(*it);
+      }
+    }
+
+  };
 
 } // end namespace

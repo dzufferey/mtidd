@@ -151,6 +151,7 @@ namespace mtidd
 
     bool operator<(idd<V, T, L> const& rhs) {
       // XXX
+      throw "TODO inclusion check";
     }
 
     const T& lookup(std::map<V,double> const& point) const {
@@ -163,6 +164,22 @@ namespace mtidd
 
     size_t hash() const {
       return hash_value;
+    }
+  }
+  
+  template< class T, class L = struct lattice<T> >
+  struct latice_hash {
+    size_t operator()(T const & t) const
+    {
+      return L.hash(t);
+    }
+  }
+
+  template< class T, class L = struct lattice<T> >
+  struct latice_equalTo {
+    size_t operator()(T const & a, T const & b) const
+    {
+      return L.equal(a, b);
     }
   }
 
@@ -197,8 +214,8 @@ namespace mtidd
                   idd_hash<V,T,L>,
                   idd_equalTo<V,T,L>> cache_t;
     cache_t cache;
-    internalizer<V> variable_ordering;
-    internalizer<T> terminals_store; //TODO instantiate Hash and Equal to match L
+    internalizer<V> variable_ordering; // thrust the default hash and equal
+    internalizer<T, latice_hash<T,L>, latice_equalTo<T,L>> terminals_store;
   public:
 
     int compare(V const & v1, V const & v2) {
