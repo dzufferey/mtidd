@@ -63,7 +63,7 @@ namespace mtidd
       return h1;
     }
     
-    idd<V, T, L> const & traverse(idd<V, T, L> const& rhs, bool lub) const {
+    idd<V, T, L> const & merge(idd<V, T, L> const& rhs, bool lub) const {
       assert(manager == rhs.manager);
       if (is_terminal()) {
         if (rhs.is_terminal()) {
@@ -77,13 +77,13 @@ namespace mtidd
             return manager.internalize(result);
           }
         } else {
-          return rhs.traverse(this, lub);
+          return rhs.merge(this, lub);
         }
       } else {
         if (rhs.is_terminal()) {
           // map this.partition with rhs
           *idd<V, T, L> result = new idd(manager, variable_index, &L.bot);
-          map_partition(result->part, [](*idd<V, T, L> x) { return x->traverse(rhs, lub); } );
+          map_partition(result->part, [](*idd<V, T, L> x) { return x->merge(rhs, lub); } );
           result.computeHash();
           return manager->internalize(result);
         } else {
@@ -91,16 +91,16 @@ namespace mtidd
           if (delta_v < 0) {
             // this is before: map this.partition with rhs
             *idd<V, T, L> result = new idd(manager, variable_index, &L.bot);
-            map_partition(result->part, [](*idd<V, T, L> x) { return x->traverse(rhs, lub); } );
+            map_partition(result->part, [](*idd<V, T, L> x) { return x->merge(rhs, lub); } );
             result.computeHash();
             return manager->internalize(result);
           } else if (delta_v > 0) {
             // rhs is before this
-            return rhs.traverse(this, lub);
+            return rhs.merge(this, lub);
           } else {
             // same variable: merge the partitions
             *idd<V, T, L> result = new idd(manager, variable_index, &L.bot);
-            merge_partition(result->part, part, rhs.part, [](*idd<V, T, L> x, *idd<V, T, L> y) { return x->traverse(*y, lub); });
+            merge_partition(result->part, part, rhs.part, [](*idd<V, T, L> x, *idd<V, T, L> y) { return x->merge(*y, lub); });
             result.computeHash();
             return manager->internalize(result);
           }
@@ -115,15 +115,15 @@ namespace mtidd
     }
     */
     
-    idd(idd_manager* mngr, T const & value): variable_index(-1), terminal_index(mngr->internalize_terminal(value)), part(nullptr), manager(mngr) {
+    idd(idd_manager<V,T,L>* mngr, T const & value): variable_index(-1), terminal_index(mngr->internalize_terminal(value)), part(nullptr), manager(mngr) {
       computeHash();
     }
     
-    idd(idd_manager* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(nullptr), manager(mngr) {
+    idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(nullptr), manager(mngr) {
       computeHash();
     }
     
-    idd(idd_manager* mngr, int var_idx, const interval & i, const idd<V, T, L> & in, const idd<V, T, L> & out): variable_index(var_idx), terminal_index(-1), part(new_partition(&out)), manager(mngr) {
+    idd(idd_manager<V,T,L>* mngr, int var_idx, const interval & i, const idd<V, T, L> & in, const idd<V, T, L> & out): variable_index(var_idx), terminal_index(-1), part(new_partition(&out)), manager(mngr) {
       insert_partition(part, i, &in);
       computeHash();
     }
@@ -140,11 +140,11 @@ namespace mtidd
     }
 
     idd<V, T, L> const & operator&&(const idd<V, T, L> & rhs) const {
-      return traverse(rhs, true);
+      return merge(rhs, true);
     }
 
     idd<V, T, L> const & operator||(const idd<V, T, L> & rhs) const {
-      return traverse(rhs, false);
+      return merge(rhs, false);
     }
 
     // only one step local, assume decendant are internalized in the manager
@@ -185,6 +185,16 @@ namespace mtidd
     size_t hash() const {
       return hash_value;
     }
+
+    void traverse(void (*apply_on_element)(idd<V, T, L> const&)) const {
+      apply_on_element(this);
+      if ( !is_terminal() ) {
+        for(auto iterator = part.begin(); iterator != part.end(); iterator++) {
+          iterator->get<1>()->traverse(apply_on_element);
+        }
+      }
+    }
+
   }
   
   template< class T, class L = struct lattice<T> >
@@ -238,6 +248,8 @@ namespace mtidd
     internalizer<T, latice_hash<T,L>, latice_equalTo<T,L>> terminals_store;
   public:
 
+    //TODO change the ordering
+
     int compare(V const & v1, V const & v2) {
       return variable_ordering.compare(v1, v2);
     }
@@ -284,11 +296,12 @@ namespace mtidd
     }
 
     void release_except(idd<V, T, L> const & keep) {
-      // TODO
-      // traverse keep and get all the pointers
-      // take the difference between the cache and the pointers to keep
-      // free the difference
-      // set the pointers to keep as the new cache
+      cache_t old_cache = cache;
+      cache.clear();
+      keep.traverse([](*idd<V, T, L> x) { old_cache.erase(x); cache.insert(x); });
+      for (auto iterator = old_cache.begin(); iterator != old_cache.end(); iterator++) {
+        delete(*iterator);
+      }
     }
 
     // constructs an IDD from a box (map v -> interval), a value, and a default value

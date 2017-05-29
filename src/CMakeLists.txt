@@ -32,6 +32,24 @@ include_directories("${PROJECT_BINARY_DIR}")
 #Bring the sources into the project
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
 
+# Testing
+
+enable_testing()
+
+ExternalProject_Add(CATCH
+  URL https://github.com/philsquared/Catch/releases/download/v1.9.4/catch.hpp
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/include/catch
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND echo ""
+  BUILD_IN_SOURCE 1
+  INSTALL_COMMAND ""
+)
+
+add_subdirectory(test)
+
+
+# Static vs dynamic
+
 if(BUILD_STATIC_BIN AND BUILD_SHARED_LIBS)
   message(FATAL_ERROR "Can't handle both of BUILD_STATIC_BIN and BUILD_SHARED_LIBS options." )
 endif()
@@ -49,6 +67,7 @@ if(BUILD_SHARED_LIBS)
   #Generate the shared library from the sources
   add_library(mtidd SHARED ${SOURCES})
 endif()
+
 
 
 #Set the location for library installation -- i.e., /usr/lib in this case
