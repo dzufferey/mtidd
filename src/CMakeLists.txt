@@ -34,16 +34,20 @@ file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
 
 # Testing
 
-enable_testing()
+include(ExternalProject)
 
 ExternalProject_Add(CATCH
   URL https://github.com/philsquared/Catch/releases/download/v1.9.4/catch.hpp
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/include/catch
+  DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/include/catch
+  DOWNLOAD_NO_EXTRACT 1
   CONFIGURE_COMMAND ""
   BUILD_COMMAND echo ""
-  BUILD_IN_SOURCE 1
   INSTALL_COMMAND ""
 )
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include) # to have catch
+
+enable_testing()
 
 add_subdirectory(test)
 

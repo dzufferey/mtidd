@@ -7,7 +7,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
 
-using std;
+using namespace std;
 
 namespace mtidd {
 

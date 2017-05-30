@@ -1,4 +1,5 @@
 #include "interval.h"
+#include <assert.h>
 
 using namespace std;
 
@@ -48,16 +49,17 @@ namespace mtidd
 
   bool contains(const interval& i, double value) {
     return (value > get<0>(i) || (value == get<0>(i) && get<1>(i) == Closed)) &&
-           (value < get<2>(i) || (value == get<2>(i) && get<3>(i) == Closed))
+           (value < get<2>(i) || (value == get<2>(i) && get<3>(i) == Closed));
   }
   
   half_interval starts_after(const interval& i) {
-    assert(get<0>(i) != numeric_limits<double>::infinity() && get<0>(i) != -numeric_limits<double>::infinity());
-    return make_tuple<double, interval_boundary>(get<0>(i), complement(get<1>(i)));
+    double value = get<0>(i);
+    assert(value != numeric_limits<double>::infinity() && value != -numeric_limits<double>::infinity());
+    return make_tuple(value, complement(get<1>(i)));
   }
 
   half_interval ends(const interval& i) {
-    return make_tuple<double, interval_boundary>(get<2>(i), get<3>(i));
+    return make_tuple(get<2>(i), get<3>(i));
   }
 
 }
