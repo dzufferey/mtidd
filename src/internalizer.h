@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <assert.h>
 
 using namespace std;
 
@@ -91,6 +92,10 @@ namespace mtidd
       for (auto it = values_to_keep.begin(); it != values_to_keep.end(); ++it) {
         internalize(*it);
       }
+    }
+
+    bool contains(T const & v) {
+      return by_value.find(v) != by_value.end();
     }
 
   };

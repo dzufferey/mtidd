@@ -40,7 +40,8 @@ namespace mtidd
   }
   
   bool is_empty(const interval& i) {
-    return get<0>(i) < get<2>(i) || !is_singleton(i);
+    return get<0>(i) > get<2>(i) ||
+           (get<0>(i) == get<2>(i) && (get<1>(i) == Open || get<3>(i) == Open));
   }
 
   bool is_singleton(const interval& i) {
