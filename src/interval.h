@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include <limits>
+#include <iostream>
 
 using namespace std;
 
@@ -15,6 +16,8 @@ namespace mtidd
   typedef enum { Open, Closed } interval_boundary;
 
   interval_boundary complement(interval_boundary b);
+
+  std::ostream & operator<<(std::ostream & out, const interval_boundary& b);
 
   ///////////////////
   // half interval //
@@ -35,6 +38,8 @@ namespace mtidd
   // rhs is the left/start of an interval
   const half_interval& min(const half_interval& lhs, const half_interval& rhs);
 
+  std::ostream & operator<<(std::ostream & out, const half_interval& i);
+
   // sentinel nodes
   constexpr half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
   constexpr half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
@@ -54,5 +59,7 @@ namespace mtidd
   half_interval starts_after(const interval& i);
 
   half_interval ends(const interval& i);
+
+  std::ostream & operator<<(std::ostream & out, const interval& i);
 
 }

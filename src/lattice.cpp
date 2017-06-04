@@ -3,15 +3,11 @@
 #include <limits>
 #include <algorithm>
 #include <cstdint>
+#include "utils.h"
 
 namespace mtidd
 {
   
-  inline uint64_t rotl64 ( uint64_t x, int8_t r )
-  {
-        return (x << r) | (x >> (64 - r));
-  }
-
   size_t mhash(const long x) {
     //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
     static_assert( sizeof(size_t) == 8 );

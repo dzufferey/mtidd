@@ -13,3 +13,8 @@ target_link_libraries(internalizer_tests mtidd)
 add_dependencies(internalizer_tests CATCH)
 add_test(internalizer_tests ${CMAKE_CURRENT_BINARY_DIR}/internalizer_tests)
 
+add_executable(partition_tests partition_tests.cpp)
+target_link_libraries(partition_tests mtidd)
+add_dependencies(partition_tests CATCH)
+add_test(partition_tests ${CMAKE_CURRENT_BINARY_DIR}/partition_tests)
+

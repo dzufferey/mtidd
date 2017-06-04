@@ -3,7 +3,10 @@
 #include <list>
 #include <tuple>
 #include <iterator>
+#include <iostream>
+#include <assert.h>
 #include "interval.h"
+#include "utils.h"
 
 // represent partitions with DLL of open/closed boundaries over double
 
@@ -26,6 +29,7 @@ namespace mtidd
   // insert an interval into a partition
   template<class A>
   void insert_partition(partition<A>& boundaries, interval const& i, const A * value) {
+    assert(!is_empty(i));
     half_interval new_start = make_tuple(get<0>(i), get<1>(i));
     auto iterator = boundaries.begin();
     // find where to start
@@ -34,14 +38,13 @@ namespace mtidd
     }
     // insert new boundary if needed
     auto next_stop = get<0>(*iterator);
-    bool overlap = get<0>(next_stop) > get<0>(new_start) || (get<1>(next_stop) == Closed && get<1>(new_start) == Closed);
+    bool overlap = get<0>(next_stop) > get<0>(new_start) || (get<1>(next_stop) == Closed && get<1>(new_start) == Open);
     // overlap && old_value != new_value
     if ( overlap && get<1>(*iterator) != value ) {
        // insert new stop with value of old_stop
        half_interval complement_of_new = make_tuple(get<0>(new_start), complement(get<1>(new_start)));
        boundaries.emplace(iterator, complement_of_new, get<1>(*iterator));
     }
-    ++iterator;
     // find where to stop
     half_interval new_stop = make_tuple(get<2>(i), get<3>(i));
     while ( get<0>(*iterator) <= new_stop && iterator != boundaries.end() ) {
@@ -51,7 +54,7 @@ namespace mtidd
     }
     // insert new boundary if needed
     if ( iterator == boundaries.end() || get<1>(*iterator) != value ) {
-      boundaries.insert(iterator, new_stop, value);
+      boundaries.emplace(iterator, new_stop, value);
     }
   }
   
@@ -120,12 +123,13 @@ namespace mtidd
 
   template<class A>
   const A * lookup_partition(partition<A>& boundaries, double value) {
-    A * result = nullptr;
     auto iterator = boundaries.begin();
-    do {
-      result = get<1>(*iterator);
+    const A * result = get<1>(*iterator);
+    while (!contains(get<0>(*iterator), value)) {
       iterator++;
-    } while (iterator != boundaries.end() && contains(get<0>(*iterator), value));
+      assert(iterator != boundaries.end());
+      result = get<1>(*iterator);
+    }
     return result;
   }
 
@@ -138,8 +142,8 @@ namespace mtidd
     const uint64_t c2 = 0x4cf5ad432745937f;
 
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
-      size_t k1 = *(reinterpret_cast<const size_t*>(&iterator->get<0>().get<0>())); //
-      switch iterator->get<0>().get<1>() {
+      size_t k1 = *(reinterpret_cast<const size_t*>(&(get<0>(get<0>(*iterator)))));
+      switch ( get<1>(get<0>(*iterator)) ) {
         case Open:
           k1 ^= 0x239b961bab0e9789;
           break;
@@ -154,7 +158,7 @@ namespace mtidd
       h1 = rotl64(h1,27);
       h1 = h1*5+0x52dce729;
 
-      h1 ^= hash_element(iterator->get<1>());
+      h1 ^= hash_element(get<1>(*iterator));
     }
 
     h1 ^= boundaries.size();
@@ -168,4 +172,11 @@ namespace mtidd
     return h1;
   }
 
+  template<class A>
+  ostream & operator<<(ostream & out, const partition<A>& boundaries) {
+    for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
+      out << *get<1>(*iterator) << " until " << get<0>(*iterator) << ", ";
+    }
+    return out;
+  }
 }

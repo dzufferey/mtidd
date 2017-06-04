@@ -9,6 +9,14 @@ namespace mtidd
   interval_boundary complement(interval_boundary b) {
     return b == Open ? Closed : Open;
   }
+  
+  ostream & operator<<(ostream & out, const interval_boundary& b) {
+    if (b == Open) {
+      return out << "Open";
+    } else {
+      return out << "Closed";
+    }
+  }
 
   // lhs is the right/end of an interval
   // rhs is the left/start of an interval
@@ -39,6 +47,14 @@ namespace mtidd
     return ends_before(lhs, rhs) ? lhs : rhs;
   }
   
+  ostream & operator<<(ostream & out, const half_interval& i) {
+    if (get<1>(i) == Open) {
+      return out << get<0>(i) << ")";
+    } else {
+      return out << get<0>(i) << "]";
+    }
+  }
+  
   bool is_empty(const interval& i) {
     return get<0>(i) > get<2>(i) ||
            (get<0>(i) == get<2>(i) && (get<1>(i) == Open || get<3>(i) == Open));
@@ -61,6 +77,20 @@ namespace mtidd
 
   half_interval ends(const interval& i) {
     return make_tuple(get<2>(i), get<3>(i));
+  }
+
+  ostream & operator<<(ostream & out, const interval& i) {
+    if (get<1>(i) == Open) {
+      out << "(";
+    } else {
+      out << "[";
+    }
+    out << get<0>(i) << ";" << get<2>(i);
+    if (get<3>(i) == Open) {
+      return out << ")";
+    } else {
+      return out << "]";
+    }
   }
 
 }
