@@ -83,7 +83,7 @@ namespace mtidd
         if (rhs.is_terminal()) {
           // map this.partition with rhs
           *idd<V, T, L> result = new idd(manager, variable_index, &L.bot);
-          map_partition(result->part, [](*idd<V, T, L> x) { return x->merge(rhs, lub); } );
+          map_partition(result->part, part, [](*idd<V, T, L> x) { return x->merge(rhs, lub); } );
           result.computeHash();
           return manager->internalize(result);
         } else {
@@ -91,7 +91,7 @@ namespace mtidd
           if (delta_v < 0) {
             // this is before: map this.partition with rhs
             *idd<V, T, L> result = new idd(manager, variable_index, &L.bot);
-            map_partition(result->part, [](*idd<V, T, L> x) { return x->merge(rhs, lub); } );
+            map_partition(result->part, part, [](*idd<V, T, L> x) { return x->merge(rhs, lub); } );
             result.computeHash();
             return manager->internalize(result);
           } else if (delta_v > 0) {

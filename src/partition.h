@@ -3,6 +3,7 @@
 #include <list>
 #include <tuple>
 #include <iterator>
+#include <functional>
 #include <iostream>
 #include <assert.h>
 #include "interval.h"
@@ -29,16 +30,20 @@ namespace mtidd
   // insert an interval into a partition
   template<class A>
   void insert_partition(partition<A>& boundaries, interval const& i, const A * value) {
+    //cerr << "inserting " << i << " in " << boundaries << endl;
     assert(!is_empty(i));
     half_interval new_start = make_tuple(get<0>(i), get<1>(i));
     auto iterator = boundaries.begin();
     // find where to start
+    bool gap = true; // we only need to insert a new boundary when there is a gap with the previous one
     while ( ends_before(get<0>(*iterator), new_start) ) {
+      gap = get<0>(get<0>(*iterator)) < get<0>(new_start);
       ++iterator;
     }
     // insert new boundary if needed
     auto next_stop = get<0>(*iterator);
-    bool overlap = get<0>(next_stop) > get<0>(new_start) || (get<1>(next_stop) == Closed && get<1>(new_start) == Open);
+    //cerr << "inserting at/before " << next_stop << endl;
+    bool overlap = gap && (get<0>(next_stop) > get<0>(new_start) || (get<1>(next_stop) == Closed && get<1>(new_start) == Open));
     // overlap && old_value != new_value
     if ( overlap && get<1>(*iterator) != value ) {
        // insert new stop with value of old_stop
@@ -52,6 +57,7 @@ namespace mtidd
       ++iterator;
       boundaries.erase(to_remove);
     }
+    //cerr << "stoping at/before " << get<0>(*iterator) << endl;
     // insert new boundary if needed
     if ( iterator == boundaries.end() || get<1>(*iterator) != value ) {
       boundaries.emplace(iterator, new_stop, value);
@@ -59,7 +65,7 @@ namespace mtidd
   }
   
   template<class A>
-  void map_partition(partition<A>& result, partition<A> const& arg, const A * (*map_element)(const A *)) {
+  void map_partition(partition<A>& result, partition<A> const& arg, function<A* (const A *)> map_elements) {
     const A * previous_value = nullptr;
     result.clear();
     auto iterator = arg.begin();
@@ -83,7 +89,7 @@ namespace mtidd
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, const A * (*merge_elements)(const A *,  const A *)) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, function<A* (const A *, const A *)> merge_elements) {
 
     const A * previous_value = nullptr;
     result.clear();
@@ -101,7 +107,7 @@ namespace mtidd
       const half_interval& next_rhs = get<0>(*iterator_rhs);
 
       const half_interval& next = min(next_lhs, next_rhs);
-      A * next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_lhs));
+      A * next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_rhs));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -112,10 +118,10 @@ namespace mtidd
 
       result.emplace_back(next, next_value);
 
-      if (next == next_lhs) {
+      if (next_lhs <= next) {
         iterator_lhs++;
       }
-      if (next == next_rhs) {
+      if (next_rhs <= next) {
         iterator_rhs++;
       }
     }
