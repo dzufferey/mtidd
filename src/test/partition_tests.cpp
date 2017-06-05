@@ -143,4 +143,32 @@ namespace mtidd {
     REQUIRE( *lookup_partition(p3,  30) == a1 + a2);
   }
 
+  TEST_CASE("hash") {
+    function<size_t (const int *)> hasher = [](const int* x) -> size_t {
+      return *x;
+    };
+    //
+    int a1 = 0;
+    int b1 = 1;
+    int c1 = 2;
+    partition<int> p1 = new_partition(&a1);
+    interval it = make_tuple(-10, Open, 10, Closed);
+    insert_partition(p1, it, &b1);
+    it = make_tuple(0, Closed, 20, Closed);
+    insert_partition(p1, it, &c1);
+    //
+    int a2 = 0;
+    int b2 = 1;
+    int c2 = 2;
+    partition<int> p2 = new_partition(&a2);
+    //
+    REQUIRE(hash_partition(p1, hasher) != hash_partition(p2, hasher));
+    //
+    it = make_tuple(-10, Open, 10, Closed);
+    insert_partition(p2, it, &b2);
+    it = make_tuple(0, Closed, 20, Closed);
+    insert_partition(p2, it, &c2);
+    REQUIRE(hash_partition(p1, hasher) == hash_partition(p2, hasher));
+  }
+
 }

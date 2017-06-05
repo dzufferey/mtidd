@@ -140,7 +140,7 @@ namespace mtidd
   }
 
   template<class A>
-  size_t hash_partition(partition<A>& boundaries, size_t (*hash_element)(const A *)) {
+  size_t hash_partition(partition<A>& boundaries, function<size_t (const A *)> hash_element) {
     //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
 
     size_t h1 = 0x3141592653589793; // seed
