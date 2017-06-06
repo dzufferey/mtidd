@@ -92,7 +92,7 @@ namespace mtidd
       } else {
         if (rhs.is_terminal()) {
           // map this.partition with rhs
-          idd<V, T, L>* result = new idd(manager, variable_index, &(L.bot));
+          idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
           function<const idd<V, T, L>* (const idd<V, T, L>*)> mapper = [&](const idd<V, T, L>* x) {
             return x->merge(rhs, lub);
           };
@@ -103,7 +103,7 @@ namespace mtidd
           int delta_v = variable_index - rhs.variable_index;
           if (delta_v < 0) {
             // this is before: map this.partition with rhs
-            idd<V, T, L>* result = new idd(manager, variable_index, &L.bot);
+            idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
             function<const idd<V, T, L>* (const idd<V, T, L>*)> mapper = [&](const idd<V, T, L>* x) {
               return x->merge(rhs, lub);
             };
@@ -115,7 +115,7 @@ namespace mtidd
             return rhs.merge(this, lub);
           } else {
             // same variable: merge the partitions
-            idd<V, T, L>* result = new idd(manager, variable_index, &L.bot);
+            idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
             function<const idd<V, T, L>* (const idd<V, T, L>*, const idd<V, T, L>*)> merger = [&](const idd<V, T, L>* x, const idd<V, T, L>* y) {
               return x->merge(*y, lub);
             };
@@ -141,7 +141,11 @@ namespace mtidd
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(nullptr), manager(mngr) {
       computeHash();
     }
-    
+
+    idd(idd_manager<V,T,L>* mngr, int var_idx, const idd<V, T, L> & out): variable_index(var_idx), terminal_index(-1), part(new_partition(&out)), manager(mngr) {
+      computeHash();
+    }
+
     idd(idd_manager<V,T,L>* mngr, int var_idx, const interval & i, const idd<V, T, L> & in, const idd<V, T, L> & out): variable_index(var_idx), terminal_index(-1), part(new_partition(&out)), manager(mngr) {
       insert_partition(part, i, &in);
       computeHash();
@@ -217,18 +221,20 @@ namespace mtidd
   };
   
   template< class T, class L = struct lattice<T> >
-  struct latice_hash {
+  struct lattice_hash {
+    L lattice = L();
     size_t operator()(T const & t) const
     {
-      return L.hash(t);
+      return lattice.hash(t);
     }
   };
 
   template< class T, class L = struct lattice<T> >
-  struct latice_equalTo {
+  struct lattice_equalTo {
+    L lattice = L();
     size_t operator()(T const & a, T const & b) const
     {
-      return L.equal(a, b);
+      return lattice.equal(a, b);
     }
   };
 
@@ -259,12 +265,16 @@ namespace mtidd
   class idd_manager
   {
   private:
+    L lattice = L();
+
     typedef unordered_set<idd<V,T,L>*, // keeps pointer around but use the hash and equality of the underlying object
                   idd_hash<V,T,L>,
                   idd_equalTo<V,T,L>> cache_t;
     cache_t cache;
     internalizer<V> variable_ordering; // thrust the default hash and equal
-    internalizer<T, latice_hash<T,L>, latice_equalTo<T,L>> terminals_store;
+    internalizer<T, lattice_hash<T,L>, lattice_equalTo<T,L>> terminals_store;
+
+
   public:
 
     //TODO change the ordering
@@ -305,12 +315,12 @@ namespace mtidd
     }
 
     int terminal_lub(int idx1, int idx2) {
-      T new_t = L.least_upper_bound(terminals_store.at(idx1), terminals_store.at(idx2));
+      T new_t = lattice.least_upper_bound(terminals_store.at(idx1), terminals_store.at(idx2));
       return internalize_terminal(new_t);
     }
     
     T const & terminal_glb(int idx1, int idx2) {
-      T new_t = L.greatest_lower_bound(terminals_store.at(idx1), terminals_store.at(idx2));
+      T new_t = lattice.greatest_lower_bound(terminals_store.at(idx1), terminals_store.at(idx2));
       return internalize_terminal(new_t);
     }
 
@@ -345,6 +355,19 @@ namespace mtidd
         --n;
       }
       return in_part;
+    }
+
+  private:
+    idd<V, T, L> const & top_idd = internalize(new idd<V,T,L>(this, lattice.top()));
+    idd<V, T, L> const & bot_idd = internalize(new idd<V,T,L>(this, lattice.bottom()));
+
+  public:
+    idd<V, T, L> const & top() {
+      return top_idd;
+    }
+
+    idd<V, T, L> const & bottom() {
+      return bot_idd;
     }
 
   };

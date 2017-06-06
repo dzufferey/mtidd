@@ -11,6 +11,7 @@ using namespace std;
 namespace mtidd {
 
   TEST_CASE("dummy") {
+    idd_manager<int, bool> mngr();
     REQUIRE(true);
   }
 
