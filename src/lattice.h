@@ -12,24 +12,23 @@ namespace mtidd
 
   // struct that contains the methods to
   template<typename T>
-  class lattice {
-  public:
-    virtual T bottom() const = 0;
-    virtual T top() const = 0;
+  struct lattice {
+    T bottom() const;
+    T top() const;
 
-    virtual T least_upper_bound(const T&, const T&) const = 0;
-    virtual T greatest_lower_bound(const T&, const T&) const = 0;
+    T least_upper_bound(const T&, const T&) const;
+    T greatest_lower_bound(const T&, const T&) const;
 
-    virtual lattice_compare compare(const T&, const T&) const = 0;
-    virtual bool equal(const T&, const T&) const = 0;
-    virtual size_t hash(const T&) const = 0;
+    lattice_compare compare(const T&, const T&) const;
+    bool equal(const T&, const T&) const;
+    size_t hash(const T&) const;
   };
 
 
 
   // Simple instances of Lattices
-
-  class boolean_lattice: lattice<bool> {
+  template<>
+  struct lattice<bool> {
   public:
     bool bottom() const;
     bool top() const;
@@ -40,7 +39,8 @@ namespace mtidd
     size_t hash(const bool& x) const;
   };
 
-  class integer_lattice: lattice<int> {
+  template<>
+  struct lattice<int> {
   public:
     int bottom() const;
     int top() const;
@@ -51,7 +51,8 @@ namespace mtidd
     size_t hash(const int& x) const;
   };
 
-  class long_lattice: lattice<long> {
+  template<>
+  struct lattice<long> {
   public:
     long bottom() const;
     long top() const;
@@ -62,7 +63,8 @@ namespace mtidd
     size_t hash(const long& x) const;
   };
 
-  class float_lattice: lattice<float> {
+  template<>
+  struct lattice<float> {
   public:
     float bottom() const;
     float top() const;
@@ -73,7 +75,8 @@ namespace mtidd
     size_t hash(const float& x) const;
   };
 
-  class double_lattice: lattice<double> {
+  template<>
+  struct lattice<double> {
   public:
     double bottom() const;
     double top() const;

@@ -36,18 +36,18 @@ namespace mtidd
     return h1;
   }
 
-  bool boolean_lattice::bottom() const { return false; }
-  bool boolean_lattice::top() const { return true; }
+  bool lattice<bool>::bottom() const { return false; }
+  bool lattice<bool>::top() const { return true; }
 
-  bool boolean_lattice::least_upper_bound(const bool& x, const bool& y) const {
+  bool lattice<bool>::least_upper_bound(const bool& x, const bool& y) const {
     return x || y;
   }
 
-  bool boolean_lattice::greatest_lower_bound(const bool& x, const bool& y) const {
+  bool lattice<bool>::greatest_lower_bound(const bool& x, const bool& y) const {
     return x && y;
   }
 
-  lattice_compare boolean_lattice::compare(const bool& x, const bool& y) const {
+  lattice_compare lattice<bool>::compare(const bool& x, const bool& y) const {
     if (x == y) {
       return Equal;
     } else if (x) {
@@ -57,32 +57,32 @@ namespace mtidd
     }
   }
 
-  bool boolean_lattice::equal(const bool& x, const bool& y) const {
+  bool lattice<bool>::equal(const bool& x, const bool& y) const {
     return x == y;
   }
 
   // not great but good enough
-  size_t boolean_lattice::hash(const bool& x) const {
+  size_t lattice<bool>::hash(const bool& x) const {
     return static_cast<size_t>(x);
   }
 
-  int integer_lattice::bottom() const {
+  int lattice<int>::bottom() const {
     return std::numeric_limits<int>::min();
   }
 
-  int integer_lattice::top() const {
+  int lattice<int>::top() const {
     return std::numeric_limits<int>::max();
   }
 
-  int integer_lattice::least_upper_bound(const int& x, const int& y) const {
+  int lattice<int>::least_upper_bound(const int& x, const int& y) const {
     return std::max(x, y);
   }
 
-  int integer_lattice::greatest_lower_bound(const int& x, const int& y) const {
+  int lattice<int>::greatest_lower_bound(const int& x, const int& y) const {
     return std::min(x, y);
   }
 
-  lattice_compare integer_lattice::compare(const int& x, const int& y) const {
+  lattice_compare lattice<int>::compare(const int& x, const int& y) const {
     if (x == y) {
       return Equal;
     } else if (x > y) {
@@ -92,31 +92,31 @@ namespace mtidd
     }
   }
 
-  bool integer_lattice::equal(const int& x, const int& y) const {
+  bool lattice<int>::equal(const int& x, const int& y) const {
     return x == y;
   }
 
-  size_t integer_lattice::hash(const int& x) const {
+  size_t lattice<int>::hash(const int& x) const {
     return mhash(x);
   }
 
-  long long_lattice::bottom() const {
+  long lattice<long>::bottom() const {
     return std::numeric_limits<long>::min();
   }
 
-  long long_lattice::top() const {
+  long lattice<long>::top() const {
     return std::numeric_limits<long>::max();
   }
 
-  long long_lattice::least_upper_bound(const long& x, const long& y) const {
+  long lattice<long>::least_upper_bound(const long& x, const long& y) const {
     return std::max(x, y);
   }
 
-  long long_lattice::greatest_lower_bound(const long& x, const long& y) const {
+  long lattice<long>::greatest_lower_bound(const long& x, const long& y) const {
     return std::min(x, y);
   }
 
-  lattice_compare long_lattice::compare(const long& x, const long& y) const {
+  lattice_compare lattice<long>::compare(const long& x, const long& y) const {
     if (x == y) {
       return Equal;
     } else if (x > y) {
@@ -126,32 +126,32 @@ namespace mtidd
     }
   }
 
-  bool long_lattice::equal(const long& x, const long& y) const {
+  bool lattice<long>::equal(const long& x, const long& y) const {
     return x == y;
   }
 
-  size_t long_lattice::hash(const long& x) const {
+  size_t lattice<long>::hash(const long& x) const {
     static_assert( sizeof(long) == 8 );
     return mhash(x);
   }
 
-  float float_lattice::bottom() const {
+  float lattice<float>::bottom() const {
     return std::numeric_limits<float>::min();
   }
 
-  float float_lattice::top() const {
+  float lattice<float>::top() const {
     return std::numeric_limits<float>::max();
   }
 
-  float float_lattice::least_upper_bound(const float& x, const float& y) const {
+  float lattice<float>::least_upper_bound(const float& x, const float& y) const {
     return std::max(x, y);
   }
 
-  float float_lattice::greatest_lower_bound(const float& x, const float& y) const {
+  float lattice<float>::greatest_lower_bound(const float& x, const float& y) const {
     return std::min(x, y);
   }
 
-  lattice_compare float_lattice::compare(const float& x, const float& y) const {
+  lattice_compare lattice<float>::compare(const float& x, const float& y) const {
     if (x == y) {
       return Equal;
     } else if (x > y) {
@@ -161,35 +161,35 @@ namespace mtidd
     }
   }
 
-  bool float_lattice::equal(const float& x, const float& y) const {
+  bool lattice<float>::equal(const float& x, const float& y) const {
     return x == y;
   }
 
   // not great but good enough
-  size_t float_lattice::hash(const float& x) const {
+  size_t lattice<float>::hash(const float& x) const {
     double d = x;
     static_assert(sizeof(double) == sizeof(long));
     long l = *(reinterpret_cast<long*>(&d));
     return mhash(l);
   }
 
-  double double_lattice::bottom() const {
+  double lattice<double>::bottom() const {
     return std::numeric_limits<double>::min();
   }
 
-  double double_lattice::top() const {
+  double lattice<double>::top() const {
     return std::numeric_limits<double>::max();
   }
 
-  double double_lattice::least_upper_bound(const double& x, const double& y) const {
+  double lattice<double>::least_upper_bound(const double& x, const double& y) const {
     return std::max(x, y);
   }
 
-  double double_lattice::greatest_lower_bound(const double& x, const double& y) const {
+  double lattice<double>::greatest_lower_bound(const double& x, const double& y) const {
     return std::min(x, y);
   }
 
-  lattice_compare double_lattice::compare(const double& x, const double& y) const {
+  lattice_compare lattice<double>::compare(const double& x, const double& y) const {
     if (x == y) {
       return Equal;
     } else if (x > y) {
@@ -199,11 +199,11 @@ namespace mtidd
     }
   }
 
-  bool double_lattice::equal(const double& x, const double& y) const {
+  bool lattice<double>::equal(const double& x, const double& y) const {
     return x == y;
   }
 
-  size_t double_lattice::hash(const double& x) const {
+  size_t lattice<double>::hash(const double& x) const {
     static_assert( sizeof(double) == 8 );
     long l = *(reinterpret_cast<const long*>(&x));
     return mhash(l);

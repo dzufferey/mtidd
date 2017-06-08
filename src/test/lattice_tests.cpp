@@ -9,7 +9,7 @@ using namespace std;
 namespace mtidd {
   
   TEST_CASE("boolean lattice") {
-    boolean_lattice b;
+    lattice<bool> b;
     REQUIRE(b.top());
     REQUIRE(!b.bottom());
     REQUIRE( b.least_upper_bound(true, true));

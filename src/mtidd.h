@@ -134,11 +134,11 @@ namespace mtidd
     }
     */
     
-    idd(idd_manager<V,T,L>* mngr, T const & value): variable_index(-1), terminal_index(mngr->internalize_terminal(value)), part(nullptr), manager(mngr) {
+    idd(idd_manager<V,T,L>* mngr, T const & value): variable_index(-1), terminal_index(mngr->internalize_terminal(value)), part(), manager(mngr) {
       computeHash();
     }
     
-    idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(nullptr), manager(mngr) {
+    idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
       computeHash();
     }
 
@@ -158,7 +158,7 @@ namespace mtidd
       throw "The copy constructor of IDD should not be used!";
     }
 
-    bool is_terminal() {
+    bool is_terminal() const {
       return variable_index < 0;
     }
 
@@ -171,28 +171,28 @@ namespace mtidd
     }
 
     // only one step local, assume decendant are internalized in the manager
-    bool operator==(idd<V, T, L> const& rhs) const {
+    bool compare_structural(idd<V, T, L> const& rhs) const {
       // only compare IDD from the same manager!
       assert(manager == rhs.manager);
 
-      return hash_value != rhs.hash_value && (
+      return hash_value == rhs.hash_value && (
                ( is_terminal() &&  rhs.is_terminal() && terminal_index == rhs.terminal_index) ||
                (!is_terminal() && !rhs.is_terminal() && variable_index == rhs.variable_index && part == rhs.part)
              );
     }
 
     // assume the IDDs are internalized so equal means are the object
-    bool compare_internalized(idd<V, T, L> const& rhs) {
+    bool operator==(idd<V, T, L> const& rhs) const {
       assert(manager == rhs.manager);
-      return (&this) == (&rhs);
+      return this == (&rhs);
     }
 
-    bool operator!=(idd<V, T, L> const& rhs) {
+    bool operator!=(idd<V, T, L> const& rhs) const {
       assert(manager == rhs.manager);
-      return (&this) != (&rhs);
+      return this != (&rhs);
     }
 
-    bool operator<(idd<V, T, L> const& rhs) {
+    bool operator<(idd<V, T, L> const& rhs) const {
       // XXX
       throw "TODO inclusion check";
     }
@@ -220,9 +220,9 @@ namespace mtidd
 
   };
   
-  template< class T, class L = struct lattice<T> >
+  template< class T, class L = class lattice<T> >
   struct lattice_hash {
-    L lattice = L();
+    L lattice; // = L();
     size_t operator()(T const & t) const
     {
       return lattice.hash(t);
@@ -231,7 +231,7 @@ namespace mtidd
 
   template< class T, class L = struct lattice<T> >
   struct lattice_equalTo {
-    L lattice = L();
+    L lattice; // = L();
     size_t operator()(T const & a, T const & b) const
     {
       return lattice.equal(a, b);
@@ -254,7 +254,7 @@ namespace mtidd
   struct idd_equalTo {
     size_t operator()(idd<V,T,L> * const lhs, idd<V,T,L> * const rhs) const
     {
-      return *lhs == *rhs;
+      return lhs->compare_structural(*rhs);
     }
   };
 
@@ -265,7 +265,7 @@ namespace mtidd
   class idd_manager
   {
   private:
-    L lattice = L();
+    L lattice;// = L();
 
     typedef unordered_set<idd<V,T,L>*, // keeps pointer around but use the hash and equality of the underlying object
                   idd_hash<V,T,L>,
@@ -294,7 +294,7 @@ namespace mtidd
         return *i;
       } else {
         delete i;
-        return *found;
+        return *(*found);
       }
     }
 
@@ -357,17 +357,14 @@ namespace mtidd
       return in_part;
     }
 
-  private:
-    idd<V, T, L> const & top_idd = internalize(new idd<V,T,L>(this, lattice.top()));
-    idd<V, T, L> const & bot_idd = internalize(new idd<V,T,L>(this, lattice.bottom()));
+    //TODO not very efficient
 
-  public:
     idd<V, T, L> const & top() {
-      return top_idd;
+      return internalize(new idd<V,T,L>(this, lattice.top()));
     }
 
     idd<V, T, L> const & bottom() {
-      return bot_idd;
+      return internalize(new idd<V,T,L>(this, lattice.bottom()));
     }
 
   };
