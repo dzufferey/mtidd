@@ -15,6 +15,9 @@ namespace mtidd {
     REQUIRE(mngr.top() == mngr.top());
     REQUIRE(mngr.bottom() == mngr.bottom());
     REQUIRE(mngr.top() != mngr.bottom());
+    REQUIRE(mngr.top().compare_structural(mngr.top()));
+    REQUIRE(mngr.bottom().compare_structural(mngr.bottom()));
+    REQUIRE(!mngr.top().compare_structural(mngr.bottom()));
   }
 
   TEST_CASE("internalize var") {
@@ -24,6 +27,17 @@ namespace mtidd {
     mngr.internalize_variable(2);
     mngr.internalize_variable(3);
     REQUIRE(mngr.number_of_variables() == 4);
+  }
+
+  TEST_CASE("consrtuct from box") {
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    mngr.internalize_variable(1);
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    box[1] = make_tuple(-20, Closed, 10, Closed);
+    auto dd = mngr.from_box(box, true, false);
+    REQUIRE(true);
   }
 
 }

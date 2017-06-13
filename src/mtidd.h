@@ -80,11 +80,11 @@ namespace mtidd
           if (lub) {
             int new_terminal = manager->terminal_lub( terminal_index, rhs.terminal_index);
             idd<V, T, L>* result = new idd(manager, new_terminal);
-            return manager.internalize(result);
+            return manager->internalize(result);
           } else {
             int new_terminal = manager->terminal_glb( terminal_index, rhs.terminal_index);
             idd<V, T, L>* result = new idd(manager, new_terminal);
-            return manager.internalize(result);
+            return manager->internalize(result);
           }
         } else {
           return rhs.merge(this, lub);
@@ -133,10 +133,6 @@ namespace mtidd
       //XXX ¬ only make sense for the boolean case
     }
     */
-    
-    idd(idd_manager<V,T,L>* mngr, T const & value): variable_index(-1), terminal_index(mngr->internalize_terminal(value)), part(), manager(mngr) {
-      computeHash();
-    }
     
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
       computeHash();
@@ -335,21 +331,23 @@ namespace mtidd
     }
 
     // constructs an IDD from a box (map v -> interval), a value, and a default value
-    idd<V, T, L> const & from_box(std::map<V,interval> const& box, T* inside_value, T* outside_value) {
-      idd<V, T, L> const & out_part = internalize(new idd<V,T,L>(this, outside_value));
-      idd<V, T, L> const & in_part = internalize(new idd<V,T,L>(this, outside_value));
+    idd<V, T, L> const & from_box(std::map<V,interval> const& box, T const & inside_value, T const & outside_value) {
+      int in_idx = internalize_terminal(inside_value);
+      idd<V, T, L> const & in_part = internalize(new idd<V,T,L>(this, in_idx));
+      int out_idx = internalize_terminal(outside_value);
+      idd<V, T, L> const & out_part = internalize(new idd<V,T,L>(this, out_idx));
       // start from the leaves and work our way up
       int n = number_of_variables();
       --n;
       while(n >= 0) {
-        V& var = variable_ordering.at[n];
+        V const & var = variable_ordering.at(n);
         if (box.count(var) > 0) {
-          const interval& i = box[var];
+          const interval & i = box.at(var);
           if (is_empty(i)) {
             return out_part;
           } else {
             auto dd = new idd<V,T,L>(this, n, i, in_part, out_part);
-            in_part = internalize(dd);
+            in_part = internalize(dd); // XXX
           }
         }
         --n;
@@ -360,11 +358,13 @@ namespace mtidd
     //TODO not very efficient
 
     idd<V, T, L> const & top() {
-      return internalize(new idd<V,T,L>(this, lattice.top()));
+      int idx = internalize_terminal(lattice.top());
+      return internalize(new idd<V,T,L>(this, idx));
     }
 
     idd<V, T, L> const & bottom() {
-      return internalize(new idd<V,T,L>(this, lattice.bottom()));
+      int idx = internalize_terminal(lattice.bottom());
+      return internalize(new idd<V,T,L>(this, idx));
     }
 
   };
