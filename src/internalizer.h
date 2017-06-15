@@ -26,23 +26,19 @@ namespace mtidd
     vector<T> by_index;
   public:
 
-    int index(T const & v) {
-      assert(by_value.count(v) > 0);
-      return by_value[v];
+    int index(T const & v) const {
+      return by_value.at(v);
     }
 
-    T const & at(int i) {
-      assert(i >= 0 && i < by_index.size());
-      return by_index[i];
+    T const & at(int i) const {
+      return by_index.at(i);
     }
 
-    int compare(T const & v1, T const & v2) {
-      assert(by_value.count(v1) > 0);
-      assert(by_value.count(v2) > 0);
-      return by_value[v1] - by_value[v2];
+    int compare(T const & v1, T const & v2) const {
+      return by_value.at(v1) - by_value.at(v2);
     }
 
-    int number_of_elements() {
+    int number_of_elements() const {
       assert(by_value.size() == by_index.size());
       return by_index.size();
     }
@@ -94,7 +90,7 @@ namespace mtidd
       }
     }
 
-    bool contains(T const & v) {
+    bool contains(T const & v) const {
       return by_value.find(v) != by_value.end();
     }
 

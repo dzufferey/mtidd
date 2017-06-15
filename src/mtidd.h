@@ -190,9 +190,13 @@ namespace mtidd
 
     const T& lookup(std::map<V,double> const& point) const {
       if (is_terminal()) {
-        return manager->terminal_at(terminal_index);
+        T const & ref = manager->terminal_at(terminal_index);
+        return ref;
       } else {
-        return lookup_partition(part, point[manager->variable_at(variable_index)])->lookup(point);
+        V const & var = manager->variable_at(variable_index);
+        double value = point.at(var);
+        idd<V, T, L> const * child = lookup_partition(part, value);
+        return child->lookup(point);
       }
     }
 
@@ -262,7 +266,7 @@ namespace mtidd
                   idd_hash<V,T,L>,
                   idd_equalTo<V,T,L>> cache_t;
     cache_t cache;
-    internalizer<V> variable_ordering; // thrust the default hash and equal
+    internalizer<V> variable_ordering; // trust the default hash and equal
     internalizer<T, lattice_hash<T,L>, lattice_equalTo<T,L>> terminals_store;
 
 

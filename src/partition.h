@@ -128,7 +128,7 @@ namespace mtidd
   }
 
   template<class A>
-  const A * lookup_partition(partition<A>& boundaries, double value) {
+  const A * lookup_partition(partition<A> const & boundaries, double value) {
     auto iterator = boundaries.begin();
     const A * result = get<1>(*iterator);
     while (!contains(get<0>(*iterator), value)) {

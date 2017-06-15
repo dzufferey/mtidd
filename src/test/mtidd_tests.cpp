@@ -20,22 +20,29 @@ namespace mtidd {
     REQUIRE(!mngr.top().compare_structural(mngr.bottom()));
   }
 
-  TEST_CASE("internalize var") {
-    idd_manager<int, bool> mngr;
-    mngr.internalize_variable(0);
-    mngr.internalize_variable(1);
-    mngr.internalize_variable(2);
-    mngr.internalize_variable(3);
+  TEST_CASE("internalize") {
+    idd_manager<int, int> mngr;
+    int idx0 = mngr.internalize_variable(0);
+    int idx1 = mngr.internalize_variable(1);
+    int idx2 = mngr.internalize_variable(2);
+    int idx3 = mngr.internalize_variable(3);
     REQUIRE(mngr.number_of_variables() == 4);
+    REQUIRE(mngr.variable_at(idx0) == 0);
+    REQUIRE(mngr.variable_at(idx1) == 1);
+    REQUIRE(mngr.variable_at(idx2) == 2);
+    REQUIRE(mngr.variable_at(idx3) == 3);
+    idx0 = mngr.internalize_terminal(true);
+    idx1 = mngr.internalize_terminal(false);
+    REQUIRE(mngr.terminal_at(idx0) == true);
+    REQUIRE(mngr.terminal_at(idx1) == false);
   }
 
   TEST_CASE("construct from terminal") {
     idd_manager<int, bool> mngr;
-    auto dd1 = mngr.from_terminal(true);
-    auto dd2 = mngr.from_terminal(false);
+    idd<int, bool> const & dd1 = mngr.from_terminal(true);
+    idd<int, bool> const & dd2 = mngr.from_terminal(false);
     REQUIRE(dd1 == mngr.top());
     REQUIRE(dd2 == mngr.bottom());
-    REQUIRE(true);
   }
 
   TEST_CASE("construct from box") {
@@ -45,8 +52,18 @@ namespace mtidd {
     map<int, interval> box;
     box[0] = make_tuple(-10, Closed, 10, Closed);
     box[1] = make_tuple(-20, Closed, 10, Closed);
-    auto dd = mngr.from_box(box, true, false);
-    REQUIRE(true);
+    idd<int, bool> const & dd = mngr.from_box(box, true, false);
+    map<int, double> point;
+    point[0] = -100;
+    point[1] = 0;
+    bool res = dd.lookup(point);
+    REQUIRE(!res);
+    point[0] = 0;
+    point[1] = 0;
+    REQUIRE( dd.lookup(point));
+    point[0] = -10;
+    point[1] = 10;
+    REQUIRE( dd.lookup(point));
   }
 
 }
