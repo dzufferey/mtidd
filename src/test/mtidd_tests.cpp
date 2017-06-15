@@ -29,7 +29,16 @@ namespace mtidd {
     REQUIRE(mngr.number_of_variables() == 4);
   }
 
-  TEST_CASE("consrtuct from box") {
+  TEST_CASE("construct from terminal") {
+    idd_manager<int, bool> mngr;
+    auto dd1 = mngr.from_terminal(true);
+    auto dd2 = mngr.from_terminal(false);
+    REQUIRE(dd1 == mngr.top());
+    REQUIRE(dd2 == mngr.bottom());
+    REQUIRE(true);
+  }
+
+  TEST_CASE("construct from box") {
     idd_manager<int, bool> mngr;
     mngr.internalize_variable(0);
     mngr.internalize_variable(1);

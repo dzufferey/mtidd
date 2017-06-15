@@ -128,11 +128,6 @@ namespace mtidd
     }
 
   public:
-    /*
-    idd<V, T, L>& operator!() const {
-      //XXX ¬ only make sense for the boolean case
-    }
-    */
     
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
       computeHash();
@@ -330,6 +325,11 @@ namespace mtidd
       }
     }
 
+    idd<V, T, L> const & from_terminal(T const & value) {
+      int idx = internalize_terminal(value);
+      return internalize(new idd<V,T,L>(this, idx));
+    }
+
     // constructs an IDD from a box (map v -> interval), a value, and a default value
     idd<V, T, L> const & from_box(std::map<V,interval> const& box, T const & inside_value, T const & outside_value) {
       int in_idx = internalize_terminal(inside_value);
@@ -337,6 +337,7 @@ namespace mtidd
       int out_idx = internalize_terminal(outside_value);
       idd<V, T, L> const & out_part = internalize(new idd<V,T,L>(this, out_idx));
       // start from the leaves and work our way up
+      idd<V, T, L> const * result = &in_part;
       int n = number_of_variables();
       --n;
       while(n >= 0) {
@@ -346,13 +347,13 @@ namespace mtidd
           if (is_empty(i)) {
             return out_part;
           } else {
-            auto dd = new idd<V,T,L>(this, n, i, in_part, out_part);
-            in_part = internalize(dd); // XXX
+            auto dd = new idd<V,T,L>(this, n, i, *result, out_part);
+            result = &internalize(dd);
           }
         }
         --n;
       }
-      return in_part;
+      return *result;
     }
 
     //TODO not very efficient
