@@ -374,4 +374,133 @@ namespace mtidd
 
   };
 
+  template< class V > // variable
+  class idd_manager<V, bool, lattice<bool>>
+  {
+  private:
+    lattice<bool> lb;
+
+    typedef unordered_set<idd<V,bool,lattice<bool>>*, // keeps pointer around but use the hash and equality of the underlying object
+                  idd_hash<V,bool,lattice<bool>>,
+                  idd_equalTo<V,bool,lattice<bool>>> cache_t;
+    cache_t cache;
+    internalizer<V> variable_ordering; // trust the default hash and equal
+
+    int true_index = 1;
+    int false_index = 0;
+
+    bool true_ref = true;
+    bool false_ref = false;
+
+  public:
+
+    //TODO change the ordering
+
+    int compare(V const & v1, V const & v2) {
+      return variable_ordering.compare(v1, v2);
+    }
+
+    int number_of_variables() {
+      return variable_ordering.number_of_elements();
+    }
+
+    idd<V, bool, lattice<bool>> const & internalize(idd<V, bool, lattice<bool>>* i) {
+      auto found = cache.find(i);
+      if (found == cache.end()) {
+        cache.insert(i);
+        return *i;
+      } else {
+        delete i;
+        return *(*found);
+      }
+    }
+
+    int internalize_variable(V const & v) {
+      return variable_ordering.internalize(v);
+    }
+
+    int internalize_terminal(bool const & t) {
+      if (t) {
+          return true_index;
+      } else {
+          return false_index;
+      }
+    }
+
+    V const & variable_at(int index) {
+      return variable_ordering.at(index);
+    }
+
+    bool const & terminal_at(int index) {
+      if (index == true_index) {
+        return true_ref;
+      } else {
+        return false_ref;
+      }
+    }
+
+    int terminal_lub(int idx1, int idx2) {
+      bool new_t = lb.least_upper_bound(terminal_at(idx1), terminal_at(idx2));
+      return internalize_terminal(new_t);
+    }
+    
+    bool const & terminal_glb(int idx1, int idx2) {
+      bool new_t = lb.greatest_lower_bound(terminal_at(idx1), terminal_at(idx2));
+      return internalize_terminal(new_t);
+    }
+
+    void release_except(idd<V, bool, lattice<bool>> const & keep) {
+      cache_t old_cache = cache;
+      cache.clear();
+      function<void (const idd<V, bool, lattice<bool>> *)> traverser = [&](const idd<V, bool, lattice<bool>>* x) { old_cache.erase(x); cache.insert(x); };
+      keep.traverse(traverser);
+      for (auto iterator = old_cache.begin(); iterator != old_cache.end(); iterator++) {
+        delete(*iterator);
+      }
+    }
+
+    idd<V, bool, lattice<bool>> const & from_terminal(bool const & value) {
+      int idx = internalize_terminal(value);
+      return internalize(new idd<V,bool,lattice<bool>>(this, idx));
+    }
+
+    // constructs an IDD from a box (map v -> interval), a value, and a default value
+    idd<V, bool, lattice<bool>> const & from_box(std::map<V,interval> const& box, bool const & inside_value, bool const & outside_value) {
+      int in_idx = internalize_terminal(inside_value);
+      idd<V, bool, lattice<bool>> const & in_part = internalize(new idd<V,bool,lattice<bool>>(this, in_idx));
+      int out_idx = internalize_terminal(outside_value);
+      idd<V, bool, lattice<bool>> const & out_part = internalize(new idd<V,bool,lattice<bool>>(this, out_idx));
+      // start from the leaves and work our way up
+      idd<V, bool, lattice<bool>> const * result = &in_part;
+      int n = number_of_variables();
+      --n;
+      while(n >= 0) {
+        V const & var = variable_ordering.at(n);
+        if (box.count(var) > 0) {
+          const interval & i = box.at(var);
+          if (is_empty(i)) {
+            return out_part;
+          } else {
+            auto dd = new idd<V,bool,lattice<bool>>(this, n, i, *result, out_part);
+            result = &internalize(dd);
+          }
+        }
+        --n;
+      }
+      return *result;
+    }
+
+    //TODO not very efficient
+
+    idd<V, bool, lattice<bool>> const & top() {
+      return internalize(new idd<V,bool,lattice<bool>>(this, true_index));
+    }
+
+    idd<V, bool, lattice<bool>> const & bottom() {
+      int idx = internalize_terminal(lb.bottom());
+      return internalize(new idd<V,bool,lattice<bool>>(this, false_index));
+    }
+
+  };
+
 } // end namespace
