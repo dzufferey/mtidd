@@ -97,7 +97,7 @@ namespace mtidd
             return x->merge(rhs, lub);
           };
           map_partition(result->part, part, mapper);
-          result.computeHash();
+          result->computeHash();
           return manager->internalize(result);
         } else {
           int delta_v = variable_index - rhs.variable_index;

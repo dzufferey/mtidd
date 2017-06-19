@@ -41,8 +41,8 @@ namespace mtidd
   std::ostream & operator<<(std::ostream & out, const half_interval& i);
 
   // sentinel nodes
-  constexpr half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
-  constexpr half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
+  const half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
+  const half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
 
   //////////////
   // interval //

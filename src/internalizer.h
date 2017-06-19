@@ -47,7 +47,8 @@ namespace mtidd
       auto found = by_value.find(v);
       if (found == by_value.end()) {
         int i = by_index.size();
-        by_index.emplace_back(v);
+        //by_index.emplace_back(v); this needs C++14
+        by_index.push_back(v);
         by_value.emplace(v, i);
         return i;
       } else {
