@@ -65,14 +65,14 @@ namespace mtidd
   }
   
   template<class A>
-  void map_partition(partition<A>& result, partition<A> const& arg, function<A* (const A *)> map_elements) {
+  void map_partition(partition<A>& result, partition<A> const& arg, function<const A* (const A *)> map_elements) {
     const A * previous_value = nullptr;
     result.clear();
     auto iterator = arg.begin();
     while (iterator != arg.end()){
 
       const half_interval& next = get<0>(*iterator);
-      A * next_value = map_elements(get<1>(*iterator));
+      const A * next_value = map_elements(get<1>(*iterator));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -89,7 +89,7 @@ namespace mtidd
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, function<A* (const A *, const A *)> merge_elements) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, function<const A* (const A *, const A *)> merge_elements) {
 
     const A * previous_value = nullptr;
     result.clear();
@@ -107,7 +107,7 @@ namespace mtidd
       const half_interval& next_rhs = get<0>(*iterator_rhs);
 
       const half_interval& next = min(next_lhs, next_rhs);
-      A * next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_rhs));
+      const A * next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_rhs));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value

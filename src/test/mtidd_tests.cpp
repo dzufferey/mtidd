@@ -64,6 +64,14 @@ namespace mtidd {
     point[0] = -10;
     point[1] = 10;
     REQUIRE( dd.lookup(point));
+    idd<int, bool> const & dd_copy = mngr.from_box(box, true, false);
+    REQUIRE(dd == dd_copy);
+    REQUIRE(dd.compare_structural(dd_copy));
+    REQUIRE(dd.hash() == dd_copy.hash());
+    idd<int, bool> const & dd_inter = dd & dd;
+    REQUIRE(dd == dd_inter);
+    idd<int, bool> const & dd_union = dd | dd;
+    REQUIRE(dd == dd_union);
   }
 
 }

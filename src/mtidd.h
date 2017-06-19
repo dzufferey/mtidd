@@ -87,14 +87,14 @@ namespace mtidd
             return manager->internalize(result);
           }
         } else {
-          return rhs.merge(this, lub);
+          return rhs.merge(*this, lub);
         }
       } else {
         if (rhs.is_terminal()) {
           // map this.partition with rhs
           idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
           function<const idd<V, T, L>* (const idd<V, T, L>*)> mapper = [&](const idd<V, T, L>* x) {
-            return x->merge(rhs, lub);
+            return &(x->merge(rhs, lub));
           };
           map_partition(result->part, part, mapper);
           result->computeHash();
@@ -105,19 +105,19 @@ namespace mtidd
             // this is before: map this.partition with rhs
             idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
             function<const idd<V, T, L>* (const idd<V, T, L>*)> mapper = [&](const idd<V, T, L>* x) {
-              return x->merge(rhs, lub);
+              return &(x->merge(rhs, lub));
             };
             map_partition(result->part, part, mapper);
             result->computeHash();
             return manager->internalize(result);
           } else if (delta_v > 0) {
             // rhs is before this
-            return rhs.merge(this, lub);
+            return rhs.merge(*this, lub);
           } else {
             // same variable: merge the partitions
             idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
             function<const idd<V, T, L>* (const idd<V, T, L>*, const idd<V, T, L>*)> merger = [&](const idd<V, T, L>* x, const idd<V, T, L>* y) {
-              return x->merge(*y, lub);
+              return &(x->merge(*y, lub));
             };
             merge_partition(result->part, part, rhs.part, merger);
             result->computeHash();
@@ -153,11 +153,11 @@ namespace mtidd
       return variable_index < 0;
     }
 
-    idd<V, T, L> const & operator&&(const idd<V, T, L> & rhs) const {
+    idd<V, T, L> const & operator&(const idd<V, T, L> & rhs) const {
       return merge(rhs, true);
     }
 
-    idd<V, T, L> const & operator||(const idd<V, T, L> & rhs) const {
+    idd<V, T, L> const & operator|(const idd<V, T, L> & rhs) const {
       return merge(rhs, false);
     }
 
@@ -314,7 +314,7 @@ namespace mtidd
       return internalize_terminal(new_t);
     }
     
-    T const & terminal_glb(int idx1, int idx2) {
+    int terminal_glb(int idx1, int idx2) {
       T new_t = lattice.greatest_lower_bound(terminals_store.at(idx1), terminals_store.at(idx2));
       return internalize_terminal(new_t);
     }
@@ -444,7 +444,7 @@ namespace mtidd
       return internalize_terminal(new_t);
     }
     
-    bool const & terminal_glb(int idx1, int idx2) {
+    int terminal_glb(int idx1, int idx2) {
       bool new_t = lb.greatest_lower_bound(terminal_at(idx1), terminal_at(idx2));
       return internalize_terminal(new_t);
     }
