@@ -179,6 +179,14 @@ namespace mtidd
   }
 
   template<class A>
+  ostream & print_partition(ostream & out, const partition<A>& boundaries, function<ostream & (ostream &, const A *)> print_element) {
+    for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
+      print_element(out, get<1>(*iterator)) << " until " << get<0>(*iterator) << ", ";
+    }
+    return out;
+  }
+
+  template<class A>
   ostream & operator<<(ostream & out, const partition<A>& boundaries) {
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
       out << *get<1>(*iterator) << " until " << get<0>(*iterator) << ", ";

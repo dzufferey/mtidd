@@ -56,8 +56,7 @@ namespace mtidd {
     map<int, double> point;
     point[0] = -100;
     point[1] = 0;
-    bool res = dd.lookup(point);
-    REQUIRE(!res);
+    REQUIRE(!dd.lookup(point));
     point[0] = 0;
     point[1] = 0;
     REQUIRE( dd.lookup(point));
@@ -72,6 +71,42 @@ namespace mtidd {
     REQUIRE(dd == dd_inter);
     idd<int, bool> const & dd_union = dd | dd;
     REQUIRE(dd == dd_union);
+  }
+
+  TEST_CASE("operations 00") {
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    idd<int, bool> const & dd1 = mngr.from_box(box, true, false);
+    idd<int, bool> const & dd2 = mngr.from_box(box, false, true);
+    //cout << "dd1" << endl;
+    //dd1.print(cout);
+    //cout << endl << "dd2" << endl;
+    //dd2.print(cout);
+    idd<int, bool> const & dd_inter = dd1 & dd2;
+    //cout << endl << "dd_inter" << endl;
+    //dd_inter.print(cout);
+    REQUIRE(mngr.bottom() == dd_inter);
+    idd<int, bool> const & dd_union = dd1 | dd2;
+    //cout << endl << "dd_union" << endl;
+    //dd_union.print(cout);
+    REQUIRE(mngr.top() == dd_union);
+  }
+
+  TEST_CASE("operations 01") {
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    mngr.internalize_variable(1);
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    box[1] = make_tuple(-20, Closed, 10, Closed);
+    idd<int, bool> const & dd1 = mngr.from_box(box, true, false);
+    idd<int, bool> const & dd2 = mngr.from_box(box, false, true);
+    idd<int, bool> const & dd_inter = dd1 & dd2;
+    REQUIRE(mngr.bottom() == dd_inter);
+    idd<int, bool> const & dd_union = dd1 | dd2;
+    REQUIRE(mngr.top() == dd_union);
   }
 
 }

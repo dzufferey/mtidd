@@ -72,20 +72,33 @@ namespace mtidd
 
       hash_value = h1;
     }
+
+    idd<V, T, L> const & check_trivial(idd<V, T, L> * result) const {
+      if (result->part.size() == 1) {
+        idd<V, T, L>* result_old = result;
+        idd<V, T, L> const & new_result = *get<1>(*(result->part.begin()));
+        free(result_old);
+        return new_result;
+      } else {
+        result->computeHash();
+        return manager->internalize(result);
+      }
+    }
     
+    //TODO need to cache operation on the subtree rather than traverse blindly ...
     idd<V, T, L> const & merge(idd<V, T, L> const& rhs, bool lub) const {
       assert(manager == rhs.manager);
       if (is_terminal()) {
         if (rhs.is_terminal()) {
+          idd<V, T, L>* result;
           if (lub) {
             int new_terminal = manager->terminal_lub( terminal_index, rhs.terminal_index);
-            idd<V, T, L>* result = new idd(manager, new_terminal);
-            return manager->internalize(result);
+            result = new idd(manager, new_terminal);
           } else {
             int new_terminal = manager->terminal_glb( terminal_index, rhs.terminal_index);
-            idd<V, T, L>* result = new idd(manager, new_terminal);
-            return manager->internalize(result);
+            result = new idd(manager, new_terminal);
           }
+          return manager->internalize(result);
         } else {
           return rhs.merge(*this, lub);
         }
@@ -97,8 +110,7 @@ namespace mtidd
             return &(x->merge(rhs, lub));
           };
           map_partition(result->part, part, mapper);
-          result->computeHash();
-          return manager->internalize(result);
+          return check_trivial(result);
         } else {
           int delta_v = variable_index - rhs.variable_index;
           if (delta_v < 0) {
@@ -108,8 +120,7 @@ namespace mtidd
               return &(x->merge(rhs, lub));
             };
             map_partition(result->part, part, mapper);
-            result->computeHash();
-            return manager->internalize(result);
+            return check_trivial(result);
           } else if (delta_v > 0) {
             // rhs is before this
             return rhs.merge(*this, lub);
@@ -120,8 +131,7 @@ namespace mtidd
               return &(x->merge(*y, lub));
             };
             merge_partition(result->part, part, rhs.part, merger);
-            result->computeHash();
-            return manager->internalize(result);
+            return check_trivial(result);
           }
         }
       }
@@ -154,11 +164,11 @@ namespace mtidd
     }
 
     idd<V, T, L> const & operator&(const idd<V, T, L> & rhs) const {
-      return merge(rhs, true);
+      return merge(rhs, false);
     }
 
     idd<V, T, L> const & operator|(const idd<V, T, L> & rhs) const {
-      return merge(rhs, false);
+      return merge(rhs, true);
     }
 
     // only one step local, assume decendant are internalized in the manager
@@ -210,6 +220,25 @@ namespace mtidd
         for(auto iterator = part.begin(); iterator != part.end(); iterator++) {
           get<1>(*iterator)->traverse(apply_on_element);
         }
+      }
+    }
+
+    ostream & print(ostream & out, int indent = 0) const {
+      for (int i = 0; i < indent; i++) out << " ";
+      out << "idd(" << hash_value << ")";
+      out << endl;
+      for (int i = 0; i < indent; i++) out << " ";
+      if (terminal_index >= 0) {
+        out << "terminal: " << manager->terminal_at(terminal_index);
+      } else {
+        out << "variable: " << manager->variable_at(variable_index);
+        for(auto iterator = part.begin(); iterator != part.end(); iterator++) {
+          out << endl;
+          for (int i = 0; i < indent; i++) out << " ";
+          out << "until " << get<0>(*iterator) << endl;
+          get<1>(*iterator)->print(out, indent + 2);
+        }
+        return out;
       }
     }
 
@@ -502,5 +531,14 @@ namespace mtidd
     }
 
   };
+
+
+  // printing functions
+
+  template<class V, class T, class L>
+  ostream & operator<<(ostream & out, const idd<V,T,L>& dd) {
+    return dd.print(out);
+  }
+
 
 } // end namespace
