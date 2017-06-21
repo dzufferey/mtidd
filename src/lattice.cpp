@@ -10,8 +10,8 @@ namespace mtidd
   
   size_t mhash(const long x) {
     //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
-    static_assert( sizeof(size_t) == 8 );
-    static_assert( sizeof(long) == 8 );
+    static_assert( sizeof(size_t) == 8, "expecting size_t to be 64 bits" );
+    static_assert( sizeof(long) == 8, "expecting long to be 64 bits" );
 
     size_t h1 = 0x3141592653589793; // seed
     const uint64_t c1 = 0x87c37b91114253d5;
@@ -131,7 +131,7 @@ namespace mtidd
   }
 
   size_t lattice<long>::hash(const long& x) const {
-    static_assert( sizeof(long) == 8 );
+    static_assert( sizeof(long) == 8 , "expecting long to be 64-bits" );
     return mhash(x);
   }
 
@@ -168,7 +168,7 @@ namespace mtidd
   // not great but good enough
   size_t lattice<float>::hash(const float& x) const {
     double d = x;
-    static_assert(sizeof(double) == sizeof(long));
+    static_assert(sizeof(double) == sizeof(long), "expecting long and double to have the same size");
     long l = *(reinterpret_cast<long*>(&d));
     return mhash(l);
   }
@@ -204,7 +204,7 @@ namespace mtidd
   }
 
   size_t lattice<double>::hash(const double& x) const {
-    static_assert( sizeof(double) == 8 );
+    static_assert( sizeof(double) == 8, "expecting double to be 64 bits" );
     long l = *(reinterpret_cast<const long*>(&x));
     return mhash(l);
   }
