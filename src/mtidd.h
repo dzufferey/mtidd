@@ -2,6 +2,7 @@
 
 #include <list>
 #include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include <vector>
 #include <memory>
@@ -9,6 +10,7 @@
 #include "lattice.h"
 #include "partition.h"
 #include "internalizer.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -22,6 +24,11 @@ namespace mtidd
             class T, // terminal
             class L = struct lattice<T> >
   class idd_manager;
+
+  template< class V, // variable
+            class T, // terminal
+            class L = struct lattice<T> >
+  class operation_cache;
 
   template< class V, // variable
             class T, // terminal
@@ -84,11 +91,12 @@ namespace mtidd
         return manager->internalize(result);
       }
     }
-    
-    //TODO need to cache operation on the subtree rather than traverse blindly ...
-    idd<V, T, L> const & merge(idd<V, T, L> const& rhs, bool lub) const {
-      assert(manager == rhs.manager);
-      if (is_terminal()) {
+
+    idd<V, T, L> const & merge1(idd<V, T, L> const& rhs, bool lub, operation_cache<V, T, L> & cache) const {
+      auto cached = cache.lookup(this, &rhs);
+      if (cached!= nullptr) {
+        return *cached;
+      } else if (is_terminal()) {
         if (rhs.is_terminal()) {
           idd<V, T, L>* result;
           if (lub) {
@@ -98,43 +106,57 @@ namespace mtidd
             int new_terminal = manager->terminal_glb( terminal_index, rhs.terminal_index);
             result = new idd(manager, new_terminal);
           }
-          return manager->internalize(result);
+          idd<V, T, L> const& internalized = manager->internalize(result);
+          cache.insert(this, &rhs, &internalized);
+          return internalized;
         } else {
-          return rhs.merge(*this, lub);
+          return rhs.merge1(*this, lub, cache);
         }
       } else {
         if (rhs.is_terminal()) {
           // map this.partition with rhs
           idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
           function<const idd<V, T, L>* (const idd<V, T, L>*)> mapper = [&](const idd<V, T, L>* x) {
-            return &(x->merge(rhs, lub));
+            return &(x->merge1(rhs, lub, cache));
           };
           map_partition(result->part, part, mapper);
-          return check_trivial(result);
+          idd<V, T, L> const& internalized = check_trivial(result);
+          cache.insert(this, &rhs, &internalized);
+          return internalized;
         } else {
           int delta_v = variable_index - rhs.variable_index;
           if (delta_v < 0) {
             // this is before: map this.partition with rhs
             idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
             function<const idd<V, T, L>* (const idd<V, T, L>*)> mapper = [&](const idd<V, T, L>* x) {
-              return &(x->merge(rhs, lub));
+              return &(x->merge1(rhs, lub, cache));
             };
             map_partition(result->part, part, mapper);
-            return check_trivial(result);
+            idd<V, T, L> const& internalized = check_trivial(result);
+            cache.insert(this, &rhs, &internalized);
+            return internalized;
           } else if (delta_v > 0) {
             // rhs is before this
-            return rhs.merge(*this, lub);
+            return rhs.merge1(*this, lub, cache);
           } else {
             // same variable: merge the partitions
             idd<V, T, L>* result = new idd(manager, variable_index, manager->bottom());
             function<const idd<V, T, L>* (const idd<V, T, L>*, const idd<V, T, L>*)> merger = [&](const idd<V, T, L>* x, const idd<V, T, L>* y) {
-              return &(x->merge(*y, lub));
+              return &(x->merge1(*y, lub, cache));
             };
             merge_partition(result->part, part, rhs.part, merger);
-            return check_trivial(result);
+            idd<V, T, L> const& internalized = check_trivial(result);
+            cache.insert(this, &rhs, &internalized);
+            return internalized;
           }
         }
       }
+    }
+
+    idd<V, T, L> const & merge(idd<V, T, L> const& rhs, bool lub) const {
+      assert(manager == rhs.manager);
+      operation_cache<V, T, L> cache;
+      return merge1(rhs, lub, cache);
     }
 
   public:
@@ -532,6 +554,56 @@ namespace mtidd
 
   };
 
+  template< class V, // variable
+            class T, // terminal
+            class L = struct lattice<T> >
+  struct idd_pair_hash {
+    size_t operator()(tuple<idd<V,T,L> const *, idd<V,T,L> const * > const & s) const
+    {
+      return combine_two_hashes( get<0>(s)->hash(),  get<0>(s)->hash());
+    }
+  };
+
+  template< class V, // variable
+            class T, // terminal
+            class L>
+  class operation_cache {
+  private:
+
+    typedef idd<V,T,L> const * value_t;
+    typedef tuple<value_t, value_t> key_t;
+
+    unordered_map<key_t, value_t, idd_pair_hash<V,T,L>> cache;
+
+  public:
+
+    value_t lookup(value_t lhs, value_t rhs) {
+      key_t entry;
+      if (lhs->hash() <= rhs->hash()) {
+        entry = make_tuple(lhs, rhs);
+      } else {
+        entry = make_tuple(lhs, rhs);
+      }
+      auto found = cache.find(entry);
+      if (found != cache.end()) {
+        return found->second;
+      } else {
+        return nullptr;
+      }
+    }
+
+    void insert(value_t lhs, value_t rhs, value_t result) {
+      key_t entry;
+      if (lhs->hash() <= rhs->hash()) {
+        entry = make_tuple(lhs, rhs);
+      } else {
+        entry = make_tuple(lhs, rhs);
+      }
+      cache[entry] = result;
+    }
+
+  };
+
 
   // printing functions
 
@@ -539,6 +611,5 @@ namespace mtidd
   ostream & operator<<(ostream & out, const idd<V,T,L>& dd) {
     return dd.print(out);
   }
-
 
 } // end namespace
