@@ -109,4 +109,35 @@ namespace mtidd {
     REQUIRE(mngr.top() == dd_union);
   }
 
+  TEST_CASE("traverse caching") {
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    idd<int, bool> const & dd1 = mngr.from_box(box, true, false);
+    int count = 0;
+    function<void (const idd<int, bool, lattice<bool>> *)> traverser = [&](const idd<int, bool, lattice<bool>>* x) { count++; };
+    dd1.traverse(traverser);
+    REQUIRE(count == 3);
+    count = 0;
+    dd1.traverse_all(traverser);
+    REQUIRE(count == 4);
+  }
+
+  TEST_CASE("traverse combine caching") {
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    idd<int, bool> const & dd1 = mngr.from_box(box, true, false);
+    int count = 0;
+    function<bool (bool const &, bool const &)> combiner = [&](bool const & x, bool const & y) {
+      count++;
+      return x ^ y;
+    };
+    idd<int, bool> const & dd2 = dd1.combine(dd1, combiner);
+    REQUIRE(count == 2);
+    REQUIRE(mngr.bottom() == dd2);
+  }
+
 }
