@@ -178,6 +178,28 @@ namespace mtidd
     return h1;
   }
 
+  // Gets the RHS of the boundaries that are contained.
+  template<class A>
+  std::list<const A *> interval_contents(const partition<A>& boundaries,
+                                         const interval& intv) {
+    // Partitions are implicitly downwards closed towards -00, so the first element is finite.
+    std::list<const A *> elements;
+    // Create half_intervals based on our original for easier comparison.
+    const half_interval lower_bound = starts_after(intv);
+    const half_interval upper_bound = ends(intv);
+    // Use two iterators to compare consecutive elements.
+    auto next = boundaries.begin();
+    auto end  = boundaries.end();
+    if (next != end) {
+      for (auto curr = next++; next != end; curr++, next++) {
+        if (!(get<0>(*next) <= upper_bound)) break;  // Reached the end!
+        if (get<0>(*curr) <= lower_bound) continue;  // LHS of partition is too low!
+        elements.push_back(get<1>(*next));
+      }
+    }
+    return elements;
+  }
+
   template<class A>
   ostream & print_partition(ostream & out, const partition<A>& boundaries, function<ostream & (ostream &, const A *)> print_element) {
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {

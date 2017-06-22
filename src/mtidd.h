@@ -177,6 +177,24 @@ namespace mtidd
       }
     }
 
+    void boxed_terminals1(map<V,interval> const & box,
+                          unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache,
+                          unordered_set<T> & terminals) const {
+      if (cache.find(this) == cache.end()) {
+        cache.insert(this);
+        if(!is_terminal()) {
+          V const& var = manager->variable_at(variable_index);
+          const interval var_intv = box.find(var)->second;
+          list<const idd<V,T,L>*> filtered = interval_contents(part, var_intv);
+          for (auto iterator = filtered.begin(); iterator != filtered.end(); iterator++) {
+            (*iterator)->boxed_terminals1(box, cache, terminals);
+          }
+        } else {
+          terminals.insert(manager->terminal_at(terminal_index));
+        }
+      }
+    }
+
   public:
     
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
@@ -279,6 +297,14 @@ namespace mtidd
     void traverse(function<void (const idd<V, T, L> *)> apply_on_element) const {
       unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
       traverse1(apply_on_element, cache);
+    }
+
+    std::unordered_set<T> boxed_terminals(std::map<V,interval> const& box) const {
+      unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+      unordered_set<T> terminals;
+      boxed_terminals1(box, cache, terminals);
+      std::cout << "Completed calls to boxed_terminals1: " << terminals.size() << std::endl;
+      return terminals;
     }
 
     ostream & print(ostream & out, int indent = 0) const {
@@ -453,7 +479,12 @@ namespace mtidd
       return internalize(new idd<V,T,L>(this, idx));
     }
 
-  };
+    std::unordered_set<T> contained_terminals(std::map<V,interval> const& box) {
+      // std::unordered_set<T> terminals;
+      // return terminals;
+    }
+
+  }; // idd
 
   template< class V > // variable
   class idd_manager<V, bool, lattice<bool>>

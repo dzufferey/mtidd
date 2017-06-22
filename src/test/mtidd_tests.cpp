@@ -140,4 +140,40 @@ namespace mtidd {
     REQUIRE(mngr.bottom() == dd2);
   }
 
+  TEST_CASE("box contains") {
+    idd_manager<int, int> mngr;
+    int idx0 = mngr.internalize_variable(0);
+    int idx1 = mngr.internalize_variable(1);
+    int idx2 = mngr.internalize_variable(2);
+    int idx3 = mngr.internalize_variable(3);
+
+    std::map<int, interval> idd_box;
+    idd_box[0] = make_tuple(-2, Closed, 2, Closed);
+    idd_box[1] = make_tuple(-4, Closed, 4, Closed);
+    idd_box[2] = make_tuple(-6, Closed, 6, Closed);
+    idd_box[3] = make_tuple(-8, Closed, 8, Closed);
+    idd<int, int> const& dd = mngr.from_box(idd_box, 999, -1);
+
+    std::map<int, interval> test_box;
+    test_box[0] = make_tuple(-100, Closed, 100, Closed);
+    test_box[1] = make_tuple(-100, Closed, 100, Closed);
+    test_box[2] = make_tuple(-100, Closed, 100, Closed);
+    test_box[3] = make_tuple(-100, Closed, 100, Closed);
+
+    /*
+    test_box[0] = make_tuple(0, Closed, 100, Closed);
+    test_box[1] = make_tuple(0, Closed, 100, Closed);
+    test_box[2] = make_tuple(0, Closed, 100, Closed);
+    test_box[3] = make_tuple(0, Closed, 100, Closed);
+    */
+
+    std::unordered_set<int> contained = dd.boxed_terminals(test_box);
+    
+    std::cout << "Terminals that are contained:" << std::endl;
+    std::cout << contained.size() << std::endl;
+    for (auto item : contained) {
+        std::cout << item << std::endl;
+    }
+  }
+
 }

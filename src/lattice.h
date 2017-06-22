@@ -24,8 +24,6 @@ namespace mtidd
     size_t hash(const T&) const;
   };
 
-
-
   // Simple instances of Lattices
   template<>
   struct lattice<bool> {
