@@ -86,6 +86,23 @@ namespace mtidd
     }
   }
 
+  template<class A>
+  void filter_partition(list<interval>& result, partition<A> const& arg, function<bool (const A *)> filter_elements) {
+    result.clear();
+    auto iterator = arg.begin();
+    half_interval lhs = lower_sentinel;
+    half_interval rhs = get<0>(*iterator);
+    while (iterator != arg.end()) {
+      if (filter_elements(get<1>(*iterator))) {
+          interval intv = make_tuple(get<0>(lhs), get<1>(lhs), get<0>(rhs), get<1>(rhs));
+          result.push_back(intv);
+      }
+      iterator++;
+      lhs = make_tuple(get<0>(rhs), complement(get<1>(rhs)));
+      rhs = get<0>(*iterator);
+    }
+  }
+
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
@@ -190,12 +207,10 @@ namespace mtidd
     // Use two iterators to compare consecutive elements.
     auto next = boundaries.begin();
     auto end  = boundaries.end();
-
     // First thing we do is explore the lower end.
-    if (lower_bound <= lower_sentinel && get<0>(*(boundaries.begin())) <= upper_bound) {
+    if (get<0>(lower_bound) == -numeric_limits<double>::infinity() && get<0>(*(boundaries.begin())) <= upper_bound) {
       elements.push_back(get<1>(*(boundaries.begin())));
     }
-
     if (next != end) {
       for (auto curr = next++; next != end; curr++, next++) {
         if (!(get<0>(*next) <= upper_bound)) break;  // Reached the end!

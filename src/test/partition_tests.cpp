@@ -171,17 +171,15 @@ namespace mtidd {
     REQUIRE(hash_partition(p1, hasher) == hash_partition(p2, hasher));
   }
 
-  TEST_CASE("partition contained elements") {
+  TEST_CASE("contents") {
+    cout << "--- contents" << endl;
     int a = 0;
     int b = 1;
     int c = 2;
     int d = 3;
     int e = 4;
-    partition<int> p = new_partition(&d);
+    partition<int> p = new_partition(&a);
   
-    std::cout << p << std::endl;
-    std::cout << "======================\n";
-
     interval it = make_tuple(-10, Open, 10, Closed);
     insert_partition(p, it, &b);
     insert_partition(p, it, &c);
@@ -190,15 +188,49 @@ namespace mtidd {
     it = make_tuple(0, Closed, 0, Closed);
     insert_partition(p, it, &e);
 
-    std::cout << p << std::endl;
+    cout << "Partition: " << p << endl;
 
-    interval test = make_tuple(-10, Closed, 10, Closed);
+    // interval test = make_tuple(-10, Closed, 10, Closed);
+    interval test = make_tuple<double, interval_boundary, double, interval_boundary>(-numeric_limits<double>::infinity(), Open, numeric_limits<double>::infinity(), Open);
 
     std::list<const int*> contents = interval_contents(p, test);
 
+    cout << "contents:";
     for (auto c : contents) {
-        std::cout << *c << std::endl;
+        cout << " " << *c;
     }
+    cout << endl;
   }
 
+  TEST_CASE("filter") {
+    cout << "--- filter" << endl;
+    int a = 0;
+    int b = 1;
+    int c = 2;
+    int d = 3;
+    int e = 4;
+    partition<int> p = new_partition(&a);
+  
+    interval it = make_tuple(-10, Open, 10, Closed);
+    insert_partition(p, it, &b);
+    insert_partition(p, it, &c);
+    it = make_tuple(-15, Closed, -5, Closed);
+    insert_partition(p, it, &d);
+    it = make_tuple(0, Closed, 0, Closed);
+    insert_partition(p, it, &e);
+
+    cout << "Partition: " << p << endl;
+
+    function <bool (const int*)> is_even = [&](const int* x) -> bool {
+        return (*x % 2 == 0);
+    };
+
+    list<interval> results;
+    filter_partition(results, p, is_even);
+
+    cout << "filtered:" << endl;
+    for (auto c : results) {
+        cout << c << endl;
+    }
+  }
 }
