@@ -177,7 +177,11 @@ namespace mtidd {
     int c = 2;
     int d = 3;
     int e = 4;
-    partition<int> p = new_partition(&a);
+    partition<int> p = new_partition(&d);
+  
+    std::cout << p << std::endl;
+    std::cout << "======================\n";
+
     interval it = make_tuple(-10, Open, 10, Closed);
     insert_partition(p, it, &b);
     insert_partition(p, it, &c);

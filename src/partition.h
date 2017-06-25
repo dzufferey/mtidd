@@ -190,6 +190,12 @@ namespace mtidd
     // Use two iterators to compare consecutive elements.
     auto next = boundaries.begin();
     auto end  = boundaries.end();
+
+    // First thing we do is explore the lower end.
+    if (lower_bound <= lower_sentinel && get<0>(*(boundaries.begin())) <= upper_bound) {
+      elements.push_back(get<1>(*(boundaries.begin())));
+    }
+
     if (next != end) {
       for (auto curr = next++; next != end; curr++, next++) {
         if (!(get<0>(*next) <= upper_bound)) break;  // Reached the end!
