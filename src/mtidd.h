@@ -268,7 +268,7 @@ namespace mtidd
       throw "TODO inclusion check";
     }
 
-    const T& lookup(std::map<V,double> const& point) const {
+    const T& lookup(map<V,double> const& point) const {
       if (is_terminal()) {
         T const & ref = manager->terminal_at(terminal_index);
         return ref;
@@ -299,11 +299,11 @@ namespace mtidd
       traverse1(apply_on_element, cache);
     }
 
-    std::unordered_set<T> boxed_terminals(std::map<V,interval> const& box) const {
+    unordered_set<T> boxed_terminals(map<V,interval> const& box) const {
       unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
       unordered_set<T> terminals;
       boxed_terminals1(box, cache, terminals);
-      std::cout << "Completed calls to boxed_terminals1: " << terminals.size() << std::endl;
+      cout << "Completed calls to boxed_terminals1: " << terminals.size() << endl;
       return terminals;
     }
 
@@ -442,7 +442,7 @@ namespace mtidd
     }
 
     // constructs an IDD from a box (map v -> interval), a value, and a default value
-    idd<V, T, L> const & from_box(std::map<V,interval> const& box, T const & inside_value, T const & outside_value) {
+    idd<V, T, L> const & from_box(map<V,interval> const& box, T const & inside_value, T const & outside_value) {
       int in_idx = internalize_terminal(inside_value);
       idd<V, T, L> const & in_part = internalize(new idd<V,T,L>(this, in_idx));
       int out_idx = internalize_terminal(outside_value);
@@ -479,8 +479,8 @@ namespace mtidd
       return internalize(new idd<V,T,L>(this, idx));
     }
 
-    std::unordered_set<T> contained_terminals(std::map<V,interval> const& box) {
-      // std::unordered_set<T> terminals;
+    unordered_set<T> contained_terminals(map<V,interval> const& box) {
+      // unordered_set<T> terminals;
       // return terminals;
     }
 
@@ -577,7 +577,7 @@ namespace mtidd
     }
 
     // constructs an IDD from a box (map v -> interval), a value, and a default value
-    idd<V, bool, lattice<bool>> const & from_box(std::map<V,interval> const& box, bool const & inside_value, bool const & outside_value) {
+    idd<V, bool, lattice<bool>> const & from_box(map<V,interval> const& box, bool const & inside_value, bool const & outside_value) {
       int in_idx = internalize_terminal(inside_value);
       idd<V, bool, lattice<bool>> const & in_part = internalize(new idd<V,bool,lattice<bool>>(this, in_idx));
       int out_idx = internalize_terminal(outside_value);

@@ -147,14 +147,14 @@ namespace mtidd {
     int idx2 = mngr.internalize_variable(2);
     int idx3 = mngr.internalize_variable(3);
 
-    std::map<int, interval> idd_box;
+    map<int, interval> idd_box;
     idd_box[0] = make_tuple(-2, Closed, 2, Closed);
     idd_box[1] = make_tuple(-4, Closed, 4, Closed);
     idd_box[2] = make_tuple(-6, Closed, 6, Closed);
     idd_box[3] = make_tuple(-8, Closed, 8, Closed);
     idd<int, int> const& dd = mngr.from_box(idd_box, 999, -1);
 
-    std::map<int, interval> test_box;
+    map<int, interval> test_box;
     test_box[0] = make_tuple(-100, Closed, 100, Closed);
     test_box[1] = make_tuple(-100, Closed, 100, Closed);
     test_box[2] = make_tuple(-100, Closed, 100, Closed);
@@ -167,12 +167,12 @@ namespace mtidd {
     test_box[3] = make_tuple(0, Closed, 100, Closed);
     */
 
-    std::unordered_set<int> contained = dd.boxed_terminals(test_box);
+    unordered_set<int> contained = dd.boxed_terminals(test_box);
     
-    std::cout << "Terminals that are contained:" << std::endl;
-    std::cout << contained.size() << std::endl;
+    cout << "Terminals that are contained:" << endl;
+    cout << contained.size() << endl;
     for (auto item : contained) {
-        std::cout << item << std::endl;
+        cout << item << endl;
     }
   }
 

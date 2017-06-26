@@ -193,7 +193,7 @@ namespace mtidd {
     // interval test = make_tuple(-10, Closed, 10, Closed);
     interval test = make_tuple<double, interval_boundary, double, interval_boundary>(-numeric_limits<double>::infinity(), Open, numeric_limits<double>::infinity(), Open);
 
-    std::list<const int*> contents = interval_contents(p, test);
+    list<const int*> contents = interval_contents(p, test);
 
     cout << "contents:";
     for (auto c : contents) {
@@ -232,5 +232,34 @@ namespace mtidd {
     for (auto c : results) {
         cout << c << endl;
     }
+  }
+  
+  TEST_CASE("foldl") {
+    cout << "--- foldl" << endl;
+    int a = 1;
+    int b = 2;
+    int c = 3;
+    int d = 4;
+    int e = 5;
+    partition<int> p = new_partition(&a);
+  
+    interval it = make_tuple(-10, Open, 10, Closed);
+    insert_partition(p, it, &b);
+    insert_partition(p, it, &c);
+    it = make_tuple(-15, Closed, -5, Closed);
+    insert_partition(p, it, &d);
+    it = make_tuple(0, Closed, 0, Closed);
+    insert_partition(p, it, &e);
+
+    cout << "Partition: " << p << endl;
+
+    function <int (int, const int*)> add = [&](int acc, const int* x) -> int {
+        return acc + *x;
+    };
+
+    int result;
+    foldl_partition(result, 0, p, add);
+
+    cout << "foldl result: " << result << endl;
   }
 }

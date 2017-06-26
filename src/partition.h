@@ -103,6 +103,16 @@ namespace mtidd
     }
   }
 
+  template<class A, class B>
+  void foldl_partition(B& result, B init, partition<A> const& arg, function<B (const B, const A*)> combine) {
+    result = init;
+    auto iterator = arg.begin();
+    while (iterator != arg.end()) {
+      result = combine(result, get<1>(*iterator));
+      iterator++;
+    }
+  }
+
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
@@ -197,10 +207,10 @@ namespace mtidd
 
   // Gets the RHS of the boundaries that are contained.
   template<class A>
-  std::list<const A *> interval_contents(const partition<A>& boundaries,
+  list<const A *> interval_contents(const partition<A>& boundaries,
                                          const interval& intv) {
     // Partitions are implicitly downwards closed towards -00, so the first element is finite.
-    std::list<const A *> elements;
+    list<const A *> elements;
     // Create half_intervals based on our original for easier comparison.
     const half_interval lower_bound = starts_after(intv);
     const half_interval upper_bound = ends(intv);
