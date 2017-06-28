@@ -185,7 +185,8 @@ namespace mtidd
         if(!is_terminal()) {
           V const& var = manager->variable_at(variable_index);
           const interval var_intv = box.find(var)->second;
-          list<const idd<V,T,L>*> filtered = interval_contents(part, var_intv);
+          list<const idd<V,T,L>*> filtered;
+          interval_covers(filtered, part, var_intv);
           for (auto iterator = filtered.begin(); iterator != filtered.end(); iterator++) {
             (*iterator)->boxed_terminals1(box, cache, terminals);
           }

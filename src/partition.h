@@ -113,6 +113,16 @@ namespace mtidd
     }
   }
 
+  template <class A>
+  bool covering_sat(partition<A> const& arg, interval& intv, A& data, function<bool (const A *, const A)> sat) {
+    list<const A*> contents;
+    interval_covered_by(contents, arg, data);
+    for (auto iterator = contents.begin(); iterator != contents.end(); iterator++) {
+        if (!sat(*iterator, data)) return false;
+    }
+    return true;
+  }
+
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
@@ -207,28 +217,46 @@ namespace mtidd
 
   // Gets the RHS of the boundaries that are contained.
   template<class A>
-  list<const A *> interval_contents(const partition<A>& boundaries,
-                                         const interval& intv) {
+  void interval_covers(list<const A*>& result, const partition<A>& boundaries, const interval& intv) {
     // Partitions are implicitly downwards closed towards -00, so the first element is finite.
-    list<const A *> elements;
+    result.clear();
     // Create half_intervals based on our original for easier comparison.
-    const half_interval lower_bound = starts_after(intv);
-    const half_interval upper_bound = ends(intv);
-    // Use two iterators to compare consecutive elements.
-    auto next = boundaries.begin();
+    const half_interval intv_low = starts_after(intv);
+    const half_interval intv_high = ends(intv);
+    auto high = boundaries.begin();
     auto end  = boundaries.end();
     // First thing we do is explore the lower end.
-    if (get<0>(lower_bound) == -numeric_limits<double>::infinity() && get<0>(*(boundaries.begin())) <= upper_bound) {
-      elements.push_back(get<1>(*(boundaries.begin())));
+    if (get<0>(intv_low) == -numeric_limits<double>::infinity() && get<0>(*(boundaries.begin())) <= intv_high) {
+      result.push_back(get<1>(*(boundaries.begin())));
     }
-    if (next != end) {
-      for (auto curr = next++; next != end; curr++, next++) {
-        if (!(get<0>(*next) <= upper_bound)) break;  // Reached the end!
-        if (get<0>(*curr) <= lower_bound) continue;  // LHS of partition is too low!
-        elements.push_back(get<1>(*next));
+    if (high != end) {
+      // Use two iterators to compare consecutive elements.
+      for (auto low = high++; high != end; low++, high++) {
+        if (!(get<0>(*high) <= intv_high)) break;  // Reached the end!
+        if (get<0>(*low) <= intv_low) continue;  // LHS of partition is too low!
+        result.push_back(get<1>(*high));
       }
     }
-    return elements;
+  }
+
+  template <class A>
+  void interval_covered_by(list<const A*>& result, const partition <A>& boundaries, const interval& intv) {
+    result.clear();
+    // Create half intervals based on our original for easier comparison.
+    const half_interval intv_low = starts_after(intv);
+    const half_interval intv_high = ends(intv);
+    // Two interators for consecutive item comparison.
+    auto high = boundaries.begin();
+    auto end  = boundaries.end();
+    // We are always covered by the lower stuff from -00 to the first boundary.
+    result.push_back(get<1>(*(boundaries.begin())));
+    if (high != end) {
+      for (auto low = high++; high != end; low++, high++) {
+        if (!(get<0>(*low) <= intv_high)) break;
+        if (get<0>(*high) <= intv_low) continue;
+        result.push_back(get<1>(*high));
+      }
+    }
   }
 
   template<class A>
