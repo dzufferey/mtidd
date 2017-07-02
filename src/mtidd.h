@@ -323,8 +323,8 @@ namespace mtidd
           out << "until " << get<0>(*iterator) << endl;
           get<1>(*iterator)->print(out, indent + 2);
         }
-        return out;
       }
+      return out;
     }
 
   };
