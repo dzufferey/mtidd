@@ -77,4 +77,5 @@ endif()
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS mtidd DESTINATION lib)
-install(DIRECTORY "${PROJECT_BINARY_DIR}" DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(FILES "${PROJECT_SOURCE_DIR}/*.h" DESTINATION include)
+
