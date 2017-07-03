@@ -78,5 +78,5 @@ endif()
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS mtidd DESTINATION lib)
 install(DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/mtidd
-        FILES_MATCHING PATTERN "*.h")
+        PATTERN "${PROJECT_SOURCE_DIR}/*.h")
 
