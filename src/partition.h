@@ -1,24 +1,23 @@
 #pragma once
 
-#include <list>
-#include <tuple>
-#include <iterator>
+#include <assert.h>
 #include <functional>
 #include <iostream>
-#include <assert.h>
+#include <iterator>
+#include <list>
+#include <tuple>
+
 #include "interval.h"
 #include "utils.h"
 
 // represent partitions with DLL of open/closed boundaries over double
-
-using namespace std;
 
 namespace mtidd
 {
 
   // a partition is just an alias for a list of boundaries
   template<class A>
-  using partition = list<tuple<half_interval, const A *>>;
+  using partition = std::list<std::tuple<half_interval, const A *>>;
 
   template<class A>
   partition<A> new_partition(const A * default_value) {
@@ -32,47 +31,47 @@ namespace mtidd
   void insert_partition(partition<A>& boundaries, interval const& i, const A * value) {
     //cerr << "inserting " << i << " in " << boundaries << endl;
     assert(!is_empty(i));
-    half_interval new_start = make_tuple(get<0>(i), get<1>(i));
+    half_interval new_start = std::make_tuple(std::get<0>(i), std::get<1>(i));
     auto iterator = boundaries.begin();
     // find where to start
     bool gap = true; // we only need to insert a new boundary when there is a gap with the previous one
-    while ( ends_before(get<0>(*iterator), new_start) ) {
-      gap = get<0>(get<0>(*iterator)) < get<0>(new_start);
+    while ( ends_before(std::get<0>(*iterator), new_start) ) {
+      gap = std::get<0>(std::get<0>(*iterator)) < std::get<0>(new_start);
       ++iterator;
     }
     // insert new boundary if needed
-    auto next_stop = get<0>(*iterator);
+    auto next_stop = std::get<0>(*iterator);
     //cerr << "inserting at/before " << next_stop << endl;
-    bool overlap = gap && (get<0>(next_stop) > get<0>(new_start) || (get<1>(next_stop) == Closed && get<1>(new_start) == Open));
+    bool overlap = gap && (std::get<0>(next_stop) > std::get<0>(new_start) || (std::get<1>(next_stop) == Closed && std::get<1>(new_start) == Open));
     // overlap && old_value != new_value
-    if ( overlap && get<1>(*iterator) != value ) {
+    if ( overlap && std::get<1>(*iterator) != value ) {
        // insert new stop with value of old_stop
-       half_interval complement_of_new = make_tuple(get<0>(new_start), complement(get<1>(new_start)));
-       boundaries.emplace(iterator, complement_of_new, get<1>(*iterator));
+       half_interval complement_of_new = std::make_tuple(std::get<0>(new_start), complement(std::get<1>(new_start)));
+       boundaries.emplace(iterator, complement_of_new, std::get<1>(*iterator));
     }
     // find where to stop
-    half_interval new_stop = make_tuple(get<2>(i), get<3>(i));
-    while ( get<0>(*iterator) <= new_stop && iterator != boundaries.end() ) {
+    half_interval new_stop = std::make_tuple(std::get<2>(i), std::get<3>(i));
+    while ( std::get<0>(*iterator) <= new_stop && iterator != boundaries.end() ) {
       auto to_remove = iterator;
       ++iterator;
       boundaries.erase(to_remove);
     }
-    //cerr << "stoping at/before " << get<0>(*iterator) << endl;
+    //cerr << "stoping at/before " << std::get<0>(*iterator) << endl;
     // insert new boundary if needed
-    if ( iterator == boundaries.end() || get<1>(*iterator) != value ) {
+    if ( iterator == boundaries.end() || std::get<1>(*iterator) != value ) {
       boundaries.emplace(iterator, new_stop, value);
     }
   }
-  
+
   template<class A>
-  void map_partition(partition<A>& result, partition<A> const& arg, function<const A* (const A *)> map_elements) {
+  void map_partition(partition<A>& result, partition<A> const& arg, std::function<const A* (const A *)> map_elements) {
     const A * previous_value = nullptr;
     result.clear();
     auto iterator = arg.begin();
     while (iterator != arg.end()){
 
-      const half_interval& next = get<0>(*iterator);
-      const A * next_value = map_elements(get<1>(*iterator));
+      const half_interval& next = std::get<0>(*iterator);
+      const A * next_value = map_elements(std::get<1>(*iterator));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -87,35 +86,35 @@ namespace mtidd
   }
 
   template<class A>
-  void filter_partition(list<interval>& result, partition<A> const& arg, function<bool (const A *)> filter_elements) {
+  void filter_partition(std::list<interval>& result, partition<A> const& arg, std::function<bool (const A *)> filter_elements) {
     result.clear();
     auto iterator = arg.begin();
     half_interval lhs = lower_sentinel;
-    half_interval rhs = get<0>(*iterator);
+    half_interval rhs = std::get<0>(*iterator);
     while (iterator != arg.end()) {
-      if (filter_elements(get<1>(*iterator))) {
-          interval intv = make_tuple(get<0>(lhs), get<1>(lhs), get<0>(rhs), get<1>(rhs));
+      if (filter_elements(std::get<1>(*iterator))) {
+          interval intv = std::make_tuple(std::get<0>(lhs), std::get<1>(lhs), std::get<0>(rhs), std::get<1>(rhs));
           result.push_back(intv);
       }
       iterator++;
-      lhs = make_tuple(get<0>(rhs), complement(get<1>(rhs)));
-      rhs = get<0>(*iterator);
+      lhs = std::make_tuple(std::get<0>(rhs), complement(std::get<1>(rhs)));
+      rhs = std::get<0>(*iterator);
     }
   }
 
   template<class A, class B>
-  void foldl_partition(B& result, B init, partition<A> const& arg, function<B (const B, const A*)> combine) {
+  void foldl_partition(B& result, B init, partition<A> const& arg, std::function<B (const B, const A*)> combine) {
     result = init;
     auto iterator = arg.begin();
     while (iterator != arg.end()) {
-      result = combine(result, get<1>(*iterator));
+      result = combine(result, std::get<1>(*iterator));
       iterator++;
     }
   }
 
   template <class A>
-  bool covering_sat(partition<A> const& arg, interval& intv, A& data, function<bool (const A *, const A)> sat) {
-    list<const A*> contents;
+  bool covering_sat(partition<A> const& arg, interval& intv, A& data, std::function<bool (const A *, const A)> sat) {
+    std::list<const A*> contents;
     interval_covered_by(contents, arg, data);
     for (auto iterator = contents.begin(); iterator != contents.end(); iterator++) {
         if (!sat(*iterator, data)) return false;
@@ -126,7 +125,7 @@ namespace mtidd
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, function<const A* (const A *, const A *)> merge_elements) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, std::function<const A* (const A *, const A *)> merge_elements) {
 
     const A * previous_value = nullptr;
     result.clear();
@@ -140,11 +139,11 @@ namespace mtidd
       // the last bound (+∞) should be the same for both partition
       assert(iterator_lhs != lhs.end() && iterator_rhs != rhs.end() );
 
-      const half_interval& next_lhs = get<0>(*iterator_lhs);
-      const half_interval& next_rhs = get<0>(*iterator_rhs);
+      const half_interval& next_lhs = std::get<0>(*iterator_lhs);
+      const half_interval& next_rhs = std::get<0>(*iterator_rhs);
 
       const half_interval& next = min(next_lhs, next_rhs);
-      const A * next_value = merge_elements(get<1>(*iterator_lhs), get<1>(*iterator_rhs));
+      const A * next_value = merge_elements(std::get<1>(*iterator_lhs), std::get<1>(*iterator_rhs));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -167,17 +166,17 @@ namespace mtidd
   template<class A>
   const A * lookup_partition(partition<A> const & boundaries, double value) {
     auto iterator = boundaries.begin();
-    const A * result = get<1>(*iterator);
-    while (!contains(get<0>(*iterator), value)) {
+    const A * result = std::get<1>(*iterator);
+    while (!contains(std::get<0>(*iterator), value)) {
       iterator++;
       assert(iterator != boundaries.end());
-      result = get<1>(*iterator);
+      result = std::get<1>(*iterator);
     }
     return result;
   }
 
   template<class A>
-  size_t hash_partition(partition<A>& boundaries, function<size_t (const A *)> hash_element) {
+  size_t hash_partition(partition<A>& boundaries, std::function<size_t (const A *)> hash_element) {
     //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
 
     size_t h1 = 0x3141592653589793; // seed
@@ -185,8 +184,8 @@ namespace mtidd
     const uint64_t c2 = 0x4cf5ad432745937f;
 
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
-      size_t k1 = *(reinterpret_cast<const size_t*>(&(get<0>(get<0>(*iterator)))));
-      switch ( get<1>(get<0>(*iterator)) ) {
+      size_t k1 = *(reinterpret_cast<const size_t*>(&(std::get<0>(std::get<0>(*iterator)))));
+      switch ( std::get<1>(std::get<0>(*iterator)) ) {
         case Open:
           k1 ^= 0x239b961bab0e9789;
           break;
@@ -201,7 +200,7 @@ namespace mtidd
       h1 = rotl64(h1,27);
       h1 = h1*5+0x52dce729;
 
-      h1 ^= hash_element(get<1>(*iterator));
+      h1 ^= hash_element(std::get<1>(*iterator));
     }
 
     h1 ^= boundaries.size();
@@ -217,7 +216,7 @@ namespace mtidd
 
   // Gets the RHS of the boundaries that are contained.
   template<class A>
-  void interval_covers(list<const A*>& result, const partition<A>& boundaries, const interval& intv) {
+  void interval_covers(std::list<const A*>& result, const partition<A>& boundaries, const interval& intv) {
     // Partitions are implicitly downwards closed towards -00, so the first element is finite.
     result.clear();
     // Create half_intervals based on our original for easier comparison.
@@ -226,21 +225,21 @@ namespace mtidd
     auto high = boundaries.begin();
     auto end  = boundaries.end();
     // First thing we do is explore the lower end.
-    if (get<0>(intv_low) == -numeric_limits<double>::infinity() && get<0>(*(boundaries.begin())) <= intv_high) {
-      result.push_back(get<1>(*(boundaries.begin())));
+    if (std::get<0>(intv_low) == -std::numeric_limits<double>::infinity() && std::get<0>(*(boundaries.begin())) <= intv_high) {
+      result.push_back(std::get<1>(*(boundaries.begin())));
     }
     if (high != end) {
       // Use two iterators to compare consecutive elements.
       for (auto low = high++; high != end; low++, high++) {
-        if (!(get<0>(*high) <= intv_high)) break;  // Reached the end!
-        if (get<0>(*low) <= intv_low) continue;  // LHS of partition is too low!
-        result.push_back(get<1>(*high));
+        if (!(std::get<0>(*high) <= intv_high)) break;  // Reached the end!
+        if (std::get<0>(*low) <= intv_low) continue;  // LHS of partition is too low!
+        result.push_back(std::get<1>(*high));
       }
     }
   }
 
   template <class A>
-  void interval_covered_by(list<const A*>& result, const partition <A>& boundaries, const interval& intv) {
+  void interval_covered_by(std::list<const A*>& result, const partition <A>& boundaries, const interval& intv) {
     result.clear();
     // Create half intervals based on our original for easier comparison.
     const half_interval intv_low = starts_after(intv);
@@ -249,28 +248,28 @@ namespace mtidd
     auto high = boundaries.begin();
     auto end  = boundaries.end();
     // We are always covered by the lower stuff from -00 to the first boundary.
-    result.push_back(get<1>(*(boundaries.begin())));
+    result.push_back(std::get<1>(*(boundaries.begin())));
     if (high != end) {
       for (auto low = high++; high != end; low++, high++) {
-        if (!(get<0>(*low) <= intv_high)) break;
-        if (get<0>(*high) <= intv_low) continue;
-        result.push_back(get<1>(*high));
+        if (!(std::get<0>(*low) <= intv_high)) break;
+        if (std::get<0>(*high) <= intv_low) continue;
+        result.push_back(std::get<1>(*high));
       }
     }
   }
 
   template<class A>
-  ostream & print_partition(ostream & out, const partition<A>& boundaries, function<ostream & (ostream &, const A *)> print_element) {
+  std::ostream & print_partition(std::ostream & out, const partition<A>& boundaries, std::function<std::ostream & (std::ostream &, const A *)> print_element) {
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
-      print_element(out, get<1>(*iterator)) << " until " << get<0>(*iterator) << ", ";
+      print_element(out, std::get<1>(*iterator)) << " until " << std::get<0>(*iterator) << ", ";
     }
     return out;
   }
 
   template<class A>
-  ostream & operator<<(ostream & out, const partition<A>& boundaries) {
+  std::ostream & operator<<(std::ostream & out, const partition<A>& boundaries) {
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
-      out << *get<1>(*iterator) << " until " << get<0>(*iterator) << ", ";
+      out << *std::get<1>(*iterator) << " until " << std::get<0>(*iterator) << ", ";
     }
     return out;
   }

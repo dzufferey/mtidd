@@ -1,10 +1,8 @@
 #pragma once
 
-#include <tuple>
-#include <limits>
 #include <iostream>
-
-using namespace std;
+#include <limits>
+#include <tuple>
 
 namespace mtidd
 {
@@ -17,13 +15,13 @@ namespace mtidd
 
   interval_boundary complement(interval_boundary b);
 
-  ostream & operator<<(ostream & out, const interval_boundary& b);
+  std::ostream & operator<<(std::ostream & out, const interval_boundary& b);
 
   ///////////////////
   // half interval //
   ///////////////////
 
-  typedef tuple<double,interval_boundary> half_interval;
+  typedef std::tuple<double,interval_boundary> half_interval;
 
   // lhs is the right/end of an interval
   // rhs is the left/start of an interval
@@ -38,17 +36,17 @@ namespace mtidd
   // rhs is the left/start of an interval
   const half_interval& min(const half_interval& lhs, const half_interval& rhs);
 
-  ostream & operator<<(ostream & out, const half_interval& i);
+  std::ostream & operator<<(std::ostream & out, const half_interval& i);
 
   // sentinel nodes
-  const half_interval lower_sentinel = make_tuple<double, interval_boundary>(-numeric_limits<double>::infinity(), Open);
-  const half_interval upper_sentinel = make_tuple<double, interval_boundary>( numeric_limits<double>::infinity(), Open);
+  const half_interval lower_sentinel = std::make_tuple<double, interval_boundary>(-std::numeric_limits<double>::infinity(), Open);
+  const half_interval upper_sentinel = std::make_tuple<double, interval_boundary>( std::numeric_limits<double>::infinity(), Open);
 
   //////////////
   // interval //
   //////////////
 
-  typedef tuple<double,interval_boundary,double,interval_boundary> interval;
+  typedef std::tuple<double,interval_boundary,double,interval_boundary> interval;
 
   bool is_empty(const interval& i);
 
@@ -60,6 +58,6 @@ namespace mtidd
 
   half_interval ends(const interval& i);
 
-  ostream & operator<<(ostream & out, const interval& i);
+  std::ostream & operator<<(std::ostream & out, const interval& i);
 
 }
