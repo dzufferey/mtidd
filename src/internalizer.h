@@ -1,16 +1,12 @@
 #pragma once
 
-#include <unordered_map>
-#include <map>
-#include <set>
-#include <vector>
-#include <memory>
-#include <functional>
 #include <assert.h>
-
-using namespace std;
-
-
+#include <functional>
+#include <map>
+#include <memory>
+#include <set>
+#include <unordered_map>
+#include <vector>
 
 namespace mtidd
 {
@@ -18,12 +14,12 @@ namespace mtidd
   // takes, stores object, and give an int reference
   // the goal is to put all the object in a single place and not leak memory
   // implicitely this also gives an order on the stored elements
-  template< class T, class Hash = hash<T>, class Equal = equal_to<T> >
+  template< class T, class Hash = std::hash<T>, class Equal = std::equal_to<T> >
   class internalizer
   {
   private:
-    unordered_map<T, int, Hash, Equal> by_value;
-    vector<T> by_index;
+    std::unordered_map<T, int, Hash, Equal> by_value;
+    std::vector<T> by_index;
   public:
 
     int index(T const & v) const {
@@ -56,9 +52,9 @@ namespace mtidd
       }
     }
 
-    void permute(map<int, int> const & permutation) {
+    void permute(std::map<int, int> const & permutation) {
       // update by_index
-      vector<T> old_indices = by_index; // FIXME twice the memory during this method...
+      std::vector<T> old_indices = by_index; // FIXME twice the memory during this method...
       by_index.clear();
       auto n = old_indices.size();
       by_index.resize(n);
@@ -84,7 +80,7 @@ namespace mtidd
     }
 
     //this invalidates the indices
-    void clear(set<T> const & values_to_keep) {
+    void clear(std::set<T> const & values_to_keep) {
       clear();
       for (auto it = values_to_keep.begin(); it != values_to_keep.end(); ++it) {
         internalize(*it);
