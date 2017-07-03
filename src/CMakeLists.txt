@@ -77,11 +77,11 @@ endif()
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS mtidd DESTINATION lib)
-install(FILES "${PROJECT_SOURCE_DIR}/config.h" DESTINATION include)
-install(FILES "${PROJECT_SOURCE_DIR}/internalizer.h" DESTINATION include)
-install(FILES "${PROJECT_SOURCE_DIR}/interval.h" DESTINATION include)
-install(FILES "${PROJECT_SOURCE_DIR}/lattice.h" DESTINATION include)
-install(FILES "${PROJECT_SOURCE_DIR}/mtidd.h" DESTINATION include)
-install(FILES "${PROJECT_SOURCE_DIR}/partition.h" DESTINATION include)
-install(FILES "${PROJECT_SOURCE_DIR}/utils.h" DESTINATION include)
+install(FILES "${PROJECT_SOURCE_DIR}/config.h" DESTINATION include/mtidd)
+install(FILES "${PROJECT_SOURCE_DIR}/internalizer.h" DESTINATION include/mtidd)
+install(FILES "${PROJECT_SOURCE_DIR}/interval.h" DESTINATION include/mtidd)
+install(FILES "${PROJECT_SOURCE_DIR}/lattice.h" DESTINATION include/mtidd)
+install(FILES "${PROJECT_SOURCE_DIR}/mtidd.h" DESTINATION include/mtidd)
+install(FILES "${PROJECT_SOURCE_DIR}/partition.h" DESTINATION include/mtidd)
+install(FILES "${PROJECT_SOURCE_DIR}/utils.h" DESTINATION include/mtidd)
 
