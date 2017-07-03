@@ -78,4 +78,4 @@ endif()
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS mtidd DESTINATION lib)
 install(FILES "${PROJECT_BINARY_DIR}/config.h" DESTINATION include)
-install(DIRECTORY "${PROJECT_SOURCE_DIR}" DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY "${PROJECT_BINARY_DIR}" DESTINATION include FILES_MATCHING PATTERN "*.h")
