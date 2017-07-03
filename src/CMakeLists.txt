@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # to the source code
 configure_file (
   "${PROJECT_SOURCE_DIR}/config.h.in"
-  "${PROJECT_BINARY_DIR}/config.h"
+  "${PROJECT_SOURCE_DIR}/config.h"
   )
 
 #Bring the headers into the project
@@ -77,5 +77,4 @@ endif()
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS mtidd DESTINATION lib)
-install(FILES "${PROJECT_BINARY_DIR}/config.h" DESTINATION include)
 install(DIRECTORY "${PROJECT_BINARY_DIR}" DESTINATION include FILES_MATCHING PATTERN "*.h")
