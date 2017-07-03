@@ -198,9 +198,6 @@ namespace mtidd
 
   public:
     
-    // We need this so we can actually contain idds as members of other objects.
-    idd() {}
-
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
       computeHash();
     }
