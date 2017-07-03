@@ -161,16 +161,15 @@ namespace mtidd {
     test_box[3] = make_tuple(-100, Closed, 100, Closed);
 
     /*
-    test_box[0] = make_tuple(0, Closed, 100, Closed);
-    test_box[1] = make_tuple(0, Closed, 100, Closed);
-    test_box[2] = make_tuple(0, Closed, 100, Closed);
-    test_box[3] = make_tuple(0, Closed, 100, Closed);
+    test_box[0] = make_tuple(-1, Closed, 1, Closed);
+    test_box[1] = make_tuple(-1, Closed, 1, Closed);
+    test_box[2] = make_tuple(-1, Closed, 1, Closed);
+    test_box[3] = make_tuple(-1, Closed, 1, Closed);
     */
 
-    unordered_set<int> contained = dd.boxed_terminals(test_box);
+    unordered_set<int> contained = dd.inf_terminal_cover(test_box);
     
     cout << "Terminals that are contained:" << endl;
-    cout << contained.size() << endl;
     for (auto item : contained) {
         cout << item << endl;
     }

@@ -175,18 +175,20 @@ namespace mtidd
       }
     }
 
-    void boxed_terminals1(std::map<V,interval> const & box,
-                          std::unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache,
-                          std::unordered_set<T> & terminals) const {
+    void inf_terminal_cover1(std::map<V,interval> const & box,
+                             std::unordered_set<idd<V,T,L> const*,
+                                                idd_hash<V,T,L>,
+                                                idd_equalTo<V,T,L>> & cache,
+                             std::unordered_set<T> & terminals) const {
       if (cache.find(this) == cache.end()) {
         cache.insert(this);
         if(!is_terminal()) {
           V const& var = manager->variable_at(variable_index);
           const interval var_intv = box.find(var)->second;
           std::list<const idd<V,T,L>*> filtered;
-          interval_covers(filtered, part, var_intv);
+          interval_covered_by(filtered, part, var_intv);
           for (auto iterator = filtered.begin(); iterator != filtered.end(); iterator++) {
-            (*iterator)->boxed_terminals1(box, cache, terminals);
+            (*iterator)->inf_terminal_cover1(box, cache, terminals);
           }
         } else {
           terminals.insert(manager->terminal_at(terminal_index));
@@ -298,11 +300,10 @@ namespace mtidd
       traverse1(apply_on_element, cache);
     }
 
-    std::unordered_set<T> boxed_terminals(std::map<V,interval> const& box) const {
+    std::unordered_set<T> inf_terminal_cover(std::map<V,interval> const& box) const {
       std::unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
       std::unordered_set<T> terminals;
-      boxed_terminals1(box, cache, terminals);
-      std::cout << "Completed calls to boxed_terminals1: " << terminals.size() << std::endl;
+      inf_terminal_cover1(box, cache, terminals);
       return terminals;
     }
 
@@ -476,11 +477,6 @@ namespace mtidd
     idd<V, T, L> const & bottom() {
       int idx = internalize_terminal(lattice.bottom());
       return internalize(new idd<V,T,L>(this, idx));
-    }
-
-    std::unordered_set<T> contained_terminals(std::map<V,interval> const& box) {
-      // std::unordered_set<T> terminals;
-      // return terminals;
     }
 
   }; // idd

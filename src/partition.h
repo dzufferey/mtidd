@@ -242,13 +242,20 @@ namespace mtidd
   void interval_covered_by(std::list<const A*>& result, const partition <A>& boundaries, const interval& intv) {
     result.clear();
     // Create half intervals based on our original for easier comparison.
-    const half_interval intv_low = starts_after(intv);
+    const half_interval intv_low  = starts_after(intv);
     const half_interval intv_high = ends(intv);
     // Two interators for consecutive item comparison.
     auto high = boundaries.begin();
     auto end  = boundaries.end();
+
+    // Explore lower end satisfiability.
+    if (std::get<0>(intv_low) == -std::numeric_limits<double>::infinity() ||
+            std::get<0>(intv_low) == std::get<0>(std::get<0>(*(boundaries.begin())))) {
+        result.push_back(std::get<1>(*(boundaries.begin())));
+    }
+
     // We are always covered by the lower stuff from -00 to the first boundary.
-    result.push_back(std::get<1>(*(boundaries.begin())));
+    // result.push_back(std::get<1>(*(boundaries.begin())));
     if (high != end) {
       for (auto low = high++; high != end; low++, high++) {
         if (!(std::get<0>(*low) <= intv_high)) break;
