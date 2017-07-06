@@ -52,31 +52,18 @@ enable_testing()
 add_subdirectory(test)
 
 
-# Static vs dynamic
+# genrate the libraries
+add_library(mtidd_static STATIC ${SOURCES})
+add_library(mtidd_shared SHARED ${SOURCES})
 
-if(BUILD_STATIC_BIN AND BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "Can't handle both of BUILD_STATIC_BIN and BUILD_SHARED_LIBS options." )
-endif()
-
-if(NOT (BUILD_STATIC_BIN OR BUILD_SHARED_LIBS))
-  message(FATAL_ERROR "Need either BUILD_STATIC_BIN or BUILD_SHARED_LIBS options." )
-endif()
-
-if(BUILD_STATIC_BIN)
-  #Generate the shared library from the sources
-  add_library(mtidd STATIC ${SOURCES})
-endif()
-
-if(BUILD_SHARED_LIBS)
-  #Generate the shared library from the sources
-  add_library(mtidd SHARED ${SOURCES})
-endif()
-
+SET_TARGET_PROPERTIES(mtidd_static PROPERTIES OUTPUT_NAME mtidd CLEAN_DIRECT_OUTPUT 1)
+SET_TARGET_PROPERTIES(mtidd_shared PROPERTIES OUTPUT_NAME mtidd CLEAN_DIRECT_OUTPUT 1)
 
 
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
-install(TARGETS mtidd DESTINATION lib)
+install(TARGETS mtidd_static DESTINATION lib)
+install(TARGETS mtidd_shared DESTINATION lib)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/" DESTINATION include/mtidd
         FILES_MATCHING PATTERN "*.h"
                        PATTERN "test" EXCLUDE)
