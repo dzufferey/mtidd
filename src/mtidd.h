@@ -371,7 +371,7 @@ namespace mtidd
   private:
     L lattice;// = L();
 
-    typedef std::unordered_set<idd<V,T,L>*, // keeps pointer around but use the hash and equality of the underlying object
+    typedef std::unordered_set<const idd<V,T,L>*, // keeps pointer around but use the hash and equality of the underlying object
                   idd_hash<V,T,L>,
                   idd_equalTo<V,T,L>> cache_t;
     cache_t cache;
@@ -487,7 +487,7 @@ namespace mtidd
   private:
     lattice<bool> lb;
 
-    typedef std::unordered_set<idd<V,bool,lattice<bool>>*, // keeps pointer around but use the hash and equality of the underlying object
+    typedef std::unordered_set<const idd<V,bool,lattice<bool>>*, // keeps pointer around but use the hash and equality of the underlying object
                   idd_hash<V,bool,lattice<bool>>,
                   idd_equalTo<V,bool,lattice<bool>>> cache_t;
     cache_t cache;

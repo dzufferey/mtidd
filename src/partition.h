@@ -214,6 +214,7 @@ namespace mtidd
     return h1;
   }
 
+  // TODO as iterator to avoid allocating a new list
   // Gets the RHS of the boundaries that are contained.
   template<class A>
   void interval_covers(std::list<const A*>& result, const partition<A>& boundaries, const interval& intv) {

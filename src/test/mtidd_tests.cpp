@@ -1,6 +1,8 @@
 #include "mtidd.h"
 
 #include <iostream>
+#include <random>
+#include <chrono>
 
 //tell Catch to provide a main (only once pre cpp)
 #define CATCH_CONFIG_MAIN
@@ -168,11 +170,75 @@ namespace mtidd {
     */
 
     unordered_set<int> contained = dd.inf_terminal_cover(test_box);
-    
-    cout << "Terminals that are contained:" << endl;
-    for (auto item : contained) {
-        cout << item << endl;
+    REQUIRE(contained.size() == 2);
+    REQUIRE(contained.count(-1) > 0);
+    REQUIRE(contained.count(999) > 0);
+  }
+
+  bool next_bool(uniform_int_distribution<int> & dist, default_random_engine & gen) {
+    int n = dist(gen);
+    return n == 0;
+  }
+
+  interval_boundary next_ib(uniform_int_distribution<int> & dist, default_random_engine & gen) {
+    return next_bool(dist, gen) ? Open : Closed;
+  }
+
+  void fill_box(int dims,
+                map<int, interval> & box,
+                uniform_real_distribution<double> & rdist,
+                uniform_int_distribution<int> & idist,
+                default_random_engine & gen) {
+    for (int i = 0; i < dims; i++) {
+      double lb = rdist(gen);
+      if (next_bool(idist, gen)) {
+        lb *= -1;
+      }
+      double ub = lb + rdist(gen);
+      box[i] = make_tuple(lb, next_ib(idist, gen), ub, next_ib(idist, gen));
     }
+  }
+
+  TEST_CASE("pseudo random operations") {
+    const int dims = 100;
+    const int ops = 10000;
+    const int release_period = 100;
+
+    default_random_engine gen(3141526535);
+    uniform_real_distribution<double> rdist(0.0,1000.0);
+    uniform_int_distribution<int> idist(0,1); //boolean
+
+    idd_manager<int, bool> mngr;
+
+    for (int i = 0; i < dims; i++) {
+      int idx = mngr.internalize_variable(0);
+      REQUIRE(idx >= 0);
+      REQUIRE(idx < dims);
+    }
+
+    using namespace std::chrono;
+    steady_clock::time_point t1 = steady_clock::now();
+
+    map<int, interval> box;
+    fill_box(dims, box, rdist, idist, gen);
+    idd<int, bool> const * dd = &(mngr.from_box(box, true, false));
+
+    for (int i = 0; i < ops; i++) {
+      fill_box(dims, box, rdist, idist, gen);
+      idd<int, bool> const & tmp = mngr.from_box(box, true, false);
+      if (next_bool(idist, gen)) {
+        dd = &((*dd) & tmp);
+      } else {
+        dd = &((*dd) | tmp);
+      }
+      if (i % release_period == 0) {
+        mngr.release_except(*dd);
+      }
+    }
+
+    steady_clock::time_point t2 = steady_clock::now();
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << "random test with " << dims << " dimensions and " << ops << " operations took " << time_span.count() << " seconds." << endl;
   }
 
 }
