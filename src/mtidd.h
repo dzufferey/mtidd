@@ -95,7 +95,7 @@ namespace mtidd
       if (result->part.size() == 1) {
         idd<V, T, L>* result_old = result;
         idd<V, T, L> const & new_result = *std::get<1>(*(result->part.begin()));
-        free(result_old);
+        delete(result_old);
         return new_result;
       } else {
         result->computeHash();
