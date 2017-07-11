@@ -18,6 +18,8 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS "-g")
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file (
