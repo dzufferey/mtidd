@@ -604,7 +604,6 @@ namespace mtidd
     }
 
     idd<V, bool, lattice<bool>> const & bottom() {
-      int idx = internalize_terminal(lb.bottom());
       return internalize(new idd<V,bool,lattice<bool>>(this, false_index));
     }
 

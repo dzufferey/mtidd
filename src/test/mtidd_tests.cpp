@@ -118,7 +118,7 @@ namespace mtidd {
     box[0] = make_tuple(-10, Closed, 10, Closed);
     idd<int, bool> const & dd1 = mngr.from_box(box, true, false);
     int count = 0;
-    function<void (const idd<int, bool, lattice<bool>> *)> traverser = [&](const idd<int, bool, lattice<bool>>* x) { count++; };
+    function<void (const idd<int, bool, lattice<bool>> *)> traverser = [&](const idd<int, bool, lattice<bool>>*) { count++; };
     dd1.traverse(traverser);
     REQUIRE(count == 3);
     count = 0;

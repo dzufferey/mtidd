@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <algorithm>
+#include <cstring>
 
 namespace mtidd
 {
@@ -165,9 +166,10 @@ namespace mtidd
 
   // not great but good enough
   size_t lattice<float>::hash(const float& x) const {
-    double d = x;
     static_assert(sizeof(double) == sizeof(long), "expecting long and double to have the same size");
-    long l = *(reinterpret_cast<long*>(&d));
+    double d = x;
+    long l;
+    memcpy(&l, &d, sizeof(l)); // this is needed to go around strict-aliasing rules
     return mhash(l);
   }
 

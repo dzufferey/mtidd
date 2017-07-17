@@ -18,6 +18,11 @@ target_link_libraries(partition_tests mtidd_shared)
 add_dependencies(partition_tests CATCH)
 add_test(partition_tests ${CMAKE_CURRENT_BINARY_DIR}/partition_tests)
 
+add_executable(partition_iterator_tests partition_iterator_tests.cpp)
+target_link_libraries(partition_iterator_tests mtidd_shared)
+add_dependencies(partition_iterator_tests CATCH)
+add_test(partition_iterator_tests ${CMAKE_CURRENT_BINARY_DIR}/partition_iterator_tests)
+
 add_executable(mtidd_tests mtidd_tests.cpp)
 target_link_libraries(mtidd_tests mtidd_shared)
 add_dependencies(mtidd_tests CATCH)

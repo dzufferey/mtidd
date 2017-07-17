@@ -1,5 +1,5 @@
 #include "interval.h"
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
@@ -33,8 +33,19 @@ namespace mtidd
     double right = get<0>(rhs);
     return left < right ||
            ( left == right &&
-             ( get<1>(lhs) == get<1>(rhs) ||
+             ( get<1>(lhs) == Open ||
                get<1>(rhs) == Closed )
+           );
+  }
+
+  // lhs and rhs are the right/end of an interval
+  bool operator<(const half_interval& lhs, const half_interval& rhs) {
+    double left = get<0>(lhs);
+    double right = get<0>(rhs);
+    return left < right ||
+           ( left == right &&
+             get<1>(lhs) == Open &&
+             get<1>(rhs) == Closed
            );
   }
 
@@ -47,6 +58,17 @@ namespace mtidd
     return ends_before(lhs, rhs) ? lhs : rhs;
   }
   
+  // i is the right/end of an interval
+  half_interval complement(const half_interval& i) {
+    double value = get<0>(i);
+    assert(value != numeric_limits<double>::infinity() && );
+    if (value == -numeric_limits<double>::infinity()) {
+      return make_tuple(value, Open);
+    } else {
+      return make_tuple(value, complement(get<1>(i)));
+    }
+  }
+  
   ostream & operator<<(ostream & out, const half_interval& i) {
     if (get<1>(i) == Open) {
       return out << get<0>(i) << ")";
@@ -55,6 +77,16 @@ namespace mtidd
     }
   }
   
+  interval make_interval(const half_interval& lb, const half_interval& ub) {
+    return make_tuple(get<0>(lb), get<1>(lb), get<0>(ub), get<1>(ub));
+  }
+
+  // lb and ub are the right/end of an interval
+  interval make_interval_after(const half_interval& lb, const half_interval& ub) {
+    half_interval new_lb = complement(lb);
+    return make_interval(new_lb, ub);
+  }
+
   bool is_empty(const interval& i) {
     return get<0>(i) > get<2>(i) ||
            (get<0>(i) == get<2>(i) && (get<1>(i) == Open || get<3>(i) == Open));
@@ -67,6 +99,19 @@ namespace mtidd
   bool contains(const interval& i, double value) {
     return (value > get<0>(i) || (value == get<0>(i) && get<1>(i) == Closed)) &&
            (value < get<2>(i) || (value == get<2>(i) && get<3>(i) == Closed));
+  }
+  
+  bool overlap(const interval& i1, const interval& i2) {
+    return !is_empty(i1) && !is_empty(i2) && (
+      (starts_after(i1) <= starts_after(i2) && starts_after(i2) < ends(i1)) ||
+      (starts_after(i2) <= starts_after(i1) && starts_after(i1) < ends(i2))
+    );
+  }
+
+  bool covers(const interval& covering, const interval& covered) {
+    return !is_empty(covering) && !is_empty(covered) && 
+           starts_after(covering) <= starts_after(covered) &&
+           ends(covered) <= ends(covering);
   }
   
   half_interval starts_after(const interval& i) {

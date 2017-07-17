@@ -270,8 +270,8 @@ namespace mtidd {
 
     function <int (int, const int*)> add = [&](int acc, const int* x) -> int {return acc + *x;};
 
-    int result;
-    foldl_partition(result, 0, p, add);
+    int result = 0;
+    foldl_partition(result, p, add);
     cout << "foldl result: " << result << endl;
   }
 }

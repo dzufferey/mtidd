@@ -1,6 +1,6 @@
 #pragma once
 
-#include <assert.h>
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <iterator>
@@ -102,24 +102,15 @@ namespace mtidd
     }
   }
 
+  // when calling the method, the accumulator contains the initial value.
+  // when returning, the accumulator contains the result
   template<class A, class B>
-  void foldl_partition(B& result, B init, partition<A> const& arg, std::function<B (const B, const A*)> combine) {
-    result = init;
+  void foldl_partition(B& accumulator, partition<A> const& arg, std::function<B (const B, const A*)> combine) {
     auto iterator = arg.begin();
     while (iterator != arg.end()) {
-      result = combine(result, std::get<1>(*iterator));
+      accumulator = combine(accumulator, std::get<1>(*iterator));
       iterator++;
     }
-  }
-
-  template <class A>
-  bool covering_sat(partition<A> const& arg, interval& intv, A& data, std::function<bool (const A *, const A)> sat) {
-    std::list<const A*> contents;
-    interval_covered_by(contents, arg, data);
-    for (auto iterator = contents.begin(); iterator != contents.end(); iterator++) {
-        if (!sat(*iterator, data)) return false;
-    }
-    return true;
   }
 
   //a method to merge to partition and combine the values
@@ -239,6 +230,7 @@ namespace mtidd
     }
   }
 
+  // TODO as iterator to avoid allocating a new list
   template <class A>
   void interval_covered_by(std::list<const A*>& result, const partition <A>& boundaries, const interval& intv) {
     result.clear();
