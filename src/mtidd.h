@@ -11,6 +11,7 @@
 #include "internalizer.h"
 #include "lattice.h"
 #include "partition.h"
+#include "partition_iterator.h"
 #include "utils.h"
 
 //TODO idd as nested class in manager to reduce the number of type arguments
@@ -185,9 +186,8 @@ namespace mtidd
         if(!is_terminal()) {
           V const& var = manager->variable_at(variable_index);
           const interval var_intv = box.find(var)->second;
-          std::list<const idd<V,T,L>*> filtered;
-          interval_covered_by(filtered, part, var_intv);
-          for (auto iterator = filtered.begin(); iterator != filtered.end(); iterator++) {
+          auto end = partition_iterator<idd<V,T,L>>::end(part);
+          for (auto iterator = partition_iterator<idd<V,T,L>>::covers(part,var_intv); iterator != end; ++iterator) {
             (*iterator)->inf_terminal_cover1(box, cache, terminals);
           }
         } else {

@@ -171,58 +171,6 @@ namespace mtidd {
     REQUIRE(hash_partition(p1, hasher) == hash_partition(p2, hasher));
   }
 
-  TEST_CASE("covers") {
-    cout << "--- covers" << endl;
-    int a = 0;
-    int b = 1;
-    int c = 2;
-    int d = 3;
-    int e = 4;
-    int f = 5;
-    partition<int> p = new_partition(&a);
-  
-    interval it = make_tuple(-10, Open, 10, Closed);
-    it = make_tuple(-20, Open, 20, Closed);
-    insert_partition(p, it, &f);
-    insert_partition(p, it, &b);
-    insert_partition(p, it, &c);
-    it = make_tuple(-15, Closed, -5, Closed);
-    insert_partition(p, it, &d);
-    it = make_tuple(0, Closed, 0, Closed);
-    insert_partition(p, it, &e);
-
-    interval test = make_tuple(-10, Closed, 10, Closed);
-    // interval test = make_tuple<double, interval_boundary, double, interval_boundary>(-numeric_limits<double>::infinity(), Open, numeric_limits<double>::infinity(), Open);
-
-    list<const int*> cover_contents;
-    interval_covers(cover_contents, p, test);
-    list<const int*> covered_by_contents;
-    interval_covered_by(covered_by_contents, p, test);
-
-    cout << "test interval:" << test << endl;
-    cout << "Partition: " << p << endl;
-    cout << "interval covers:";
-    for (auto c : cover_contents) cout << " " << *c;
-    cout << endl;
-    cout << "interval covered by:";
-    for (auto c : covered_by_contents) cout << " " << *c;
-    cout << endl;
- 
-    list<int> target_covers = {2, 4};
-    list<int> non_ptr_covers;
-    for (auto it = cover_contents.begin(); it != cover_contents.end(); it++) {
-      non_ptr_covers.push_back(**it);
-    }
-    REQUIRE(target_covers == non_ptr_covers);
-
-    list<int> target_covered_by = {3, 2, 4, 2};
-    list<int> non_ptr_covered_by;
-    for (auto it = covered_by_contents.begin(); it != covered_by_contents.end(); it++) {
-      non_ptr_covered_by.push_back(**it);
-    }
-    REQUIRE(target_covered_by == non_ptr_covered_by);
- }
-
   TEST_CASE("filter") {
     cout << "--- filter" << endl;
     int a = 0;

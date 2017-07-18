@@ -205,59 +205,6 @@ namespace mtidd
     return h1;
   }
 
-  // TODO as iterator to avoid allocating a new list
-  // Gets the RHS of the boundaries that are contained.
-  template<class A>
-  void interval_covers(std::list<const A*>& result, const partition<A>& boundaries, const interval& intv) {
-    // Partitions are implicitly downwards closed towards -00, so the first element is finite.
-    result.clear();
-    // Create half_intervals based on our original for easier comparison.
-    const half_interval intv_low = starts_after(intv);
-    const half_interval intv_high = ends(intv);
-    auto high = boundaries.begin();
-    auto end  = boundaries.end();
-    // First thing we do is explore the lower end.
-    if (std::get<0>(intv_low) == -std::numeric_limits<double>::infinity() && std::get<0>(*(boundaries.begin())) <= intv_high) {
-      result.push_back(std::get<1>(*(boundaries.begin())));
-    }
-    if (high != end) {
-      // Use two iterators to compare consecutive elements.
-      for (auto low = high++; high != end; low++, high++) {
-        if (!(std::get<0>(*high) <= intv_high)) break;  // Reached the end!
-        if (std::get<0>(*low) <= intv_low) continue;  // LHS of partition is too low!
-        result.push_back(std::get<1>(*high));
-      }
-    }
-  }
-
-  // TODO as iterator to avoid allocating a new list
-  template <class A>
-  void interval_covered_by(std::list<const A*>& result, const partition <A>& boundaries, const interval& intv) {
-    result.clear();
-    // Create half intervals based on our original for easier comparison.
-    const half_interval intv_low  = starts_after(intv);
-    const half_interval intv_high = ends(intv);
-    // Two interators for consecutive item comparison.
-    auto high = boundaries.begin();
-    auto end  = boundaries.end();
-
-    // Explore lower end satisfiability.
-    if (std::get<0>(intv_low) == -std::numeric_limits<double>::infinity() ||
-            std::get<0>(intv_low) == std::get<0>(std::get<0>(*(boundaries.begin())))) {
-        result.push_back(std::get<1>(*(boundaries.begin())));
-    }
-
-    // We are always covered by the lower stuff from -00 to the first boundary.
-    // result.push_back(std::get<1>(*(boundaries.begin())));
-    if (high != end) {
-      for (auto low = high++; high != end; low++, high++) {
-        if (!(std::get<0>(*low) <= intv_high)) break;
-        if (std::get<0>(*high) <= intv_low) continue;
-        result.push_back(std::get<1>(*high));
-      }
-    }
-  }
-
   template<class A>
   std::ostream & print_partition(std::ostream & out, const partition<A>& boundaries, std::function<std::ostream & (std::ostream &, const A *)> print_element) {
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "partition.h"
-//#include <iostream>
 
 namespace mtidd
 {
@@ -92,8 +91,6 @@ namespace mtidd
       assert(!is_empty(intv));
       filter_fun  f = [&](half_interval const & a, half_interval const & b, const A*) {
         interval i = make_interval(a, b); 
-        //bool res = overlap(i, intv);
-        //std::cerr << "overlap(" << i << ", " << intv << ") = " << res << std::endl;
         return overlap(i, intv);
       };
       return partition_iterator<A>(boundaries, f);
