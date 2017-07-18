@@ -1,5 +1,6 @@
 # cmake build tree
 build/
+mtidd_config.h
 
 # Compiled Object files
 *.slo

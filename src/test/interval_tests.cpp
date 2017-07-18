@@ -35,15 +35,25 @@ namespace mtidd {
     REQUIRE(min(upper_sentinel,  hio) == hio);
 
     REQUIRE(hio <= hi);
+    REQUIRE(hio < hi);
     REQUIRE(!(hi <= hio));
+    REQUIRE(!(hi < hio));
     REQUIRE(lower_sentinel <= hi);
     REQUIRE(lower_sentinel <= hio);
+    REQUIRE(lower_sentinel < hi);
+    REQUIRE(lower_sentinel < hio);
     REQUIRE(!(upper_sentinel <= hi));
     REQUIRE(!(upper_sentinel <= hio));
+    REQUIRE(!(upper_sentinel < hi));
+    REQUIRE(!(upper_sentinel < hio));
     REQUIRE(hi <= upper_sentinel);
+    REQUIRE(hi < upper_sentinel);
     REQUIRE(hio <= upper_sentinel);
+    REQUIRE(hio < upper_sentinel);
     REQUIRE(!(hi <= lower_sentinel));
+    REQUIRE(!(hi < lower_sentinel));
     REQUIRE(!(hio <= lower_sentinel));
+    REQUIRE(!(hio < lower_sentinel));
   }
 
   TEST_CASE("interval"){
@@ -73,6 +83,20 @@ namespace mtidd {
     REQUIRE(!contains(i3, 20) );
     REQUIRE( is_empty(i3));
     REQUIRE(!is_singleton(i3));
+
+    REQUIRE( overlap(i1, i2));
+    REQUIRE( overlap(i2, i1));
+    REQUIRE(!overlap(i1, i3));
+    REQUIRE(!overlap(i3, i1));
+    REQUIRE(!overlap(i2, i3));
+    REQUIRE(!overlap(i3, i2));
+    
+    REQUIRE( covers(i1, i2));
+    REQUIRE(!covers(i2, i1));
+    REQUIRE(!covers(i1, i3));
+    REQUIRE(!covers(i3, i1));
+    REQUIRE(!covers(i2, i3));
+    REQUIRE(!covers(i3, i2));
   }
 
 }

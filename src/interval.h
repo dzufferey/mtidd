@@ -29,12 +29,18 @@ namespace mtidd
 
   // lhs and rhs are the right/end of an interval
   bool operator<=(const half_interval& lhs, const half_interval& rhs);
+  
+  // lhs and rhs are the right/end of an interval
+  bool operator<(const half_interval& lhs, const half_interval& rhs);
 
   bool contains(const half_interval& end, double value);
 
   // lhs is the right/end of an interval
   // rhs is the left/start of an interval
   const half_interval& min(const half_interval& lhs, const half_interval& rhs);
+
+  // i is the right/end of an interval
+  half_interval complement(const half_interval& i);
 
   std::ostream & operator<<(std::ostream & out, const half_interval& i);
 
@@ -48,12 +54,22 @@ namespace mtidd
 
   typedef std::tuple<double,interval_boundary,double,interval_boundary> interval;
 
+  interval make_interval(const half_interval& lb, const half_interval& ub);
+
+  // lb and ub are the right/end of an interval
+  interval make_interval_after(const half_interval& lb, const half_interval& ub);
+
   bool is_empty(const interval& i);
 
   bool is_singleton(const interval& i);
 
   bool contains(const interval& i, double value);
 
+  bool overlap(const interval& i1, const interval& i2);
+
+  bool covers(const interval& covering, const interval& covered);
+
+  // returns the half_interval ending just before i, i starts after the returned interval
   half_interval starts_after(const interval& i);
 
   half_interval ends(const interval& i);

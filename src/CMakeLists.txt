@@ -18,13 +18,15 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "-g -pg")
+set(CMAKE_CXX_FLAGS         "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wextra -g -fno-inline -pg")
+set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Wextra -O3 -DNDEBUG")
 
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file (
-  "${PROJECT_SOURCE_DIR}/config.h.in"
-  "${PROJECT_SOURCE_DIR}/config.h"
+  "${PROJECT_SOURCE_DIR}/mtidd_config.h.in"
+  "${PROJECT_SOURCE_DIR}/mtidd_config.h"
   )
 
 #Bring the headers into the project
