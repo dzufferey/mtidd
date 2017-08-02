@@ -378,8 +378,18 @@ namespace mtidd
     internalizer<V> variable_ordering; // trust the default hash and equal
     internalizer<T, lattice_hash<T,L>, lattice_equalTo<T,L>> terminals_store;
 
+    //caching top and bottom as they are often called
+    idd<V, T, L> const * _top = nullptr;
+    idd<V, T, L> const * _bottom = nullptr;
+
 
   public:
+
+    ~idd_manager() {
+      for (auto iterator = cache.begin(); iterator != cache.end(); iterator++) {
+        delete(*iterator);
+      }
+    }
 
     //TODO change the ordering
 
@@ -432,6 +442,12 @@ namespace mtidd
       std::function<void (const idd<V, T, L> *)> traverser = [&](const idd<V, T, L>* x) { old_cache.erase(x); cache.insert(x); };
       keep.traverse(traverser);
       for (auto iterator = old_cache.begin(); iterator != old_cache.end(); iterator++) {
+        if (*iterator == _top) {
+          _top = nullptr;
+        }
+        if (*iterator == _bottom) {
+          _bottom = nullptr;
+        }
         delete(*iterator);
       }
     }
@@ -467,16 +483,18 @@ namespace mtidd
       return *result;
     }
 
-    //TODO not very efficient
-
     idd<V, T, L> const & top() {
-      int idx = internalize_terminal(lattice.top());
-      return internalize(new idd<V,T,L>(this, idx));
+      if (_top == nullptr) {
+        _top = &from_terminal(lattice.top());
+      }
+      return *_top;
     }
 
     idd<V, T, L> const & bottom() {
-      int idx = internalize_terminal(lattice.bottom());
-      return internalize(new idd<V,T,L>(this, idx));
+      if (_bottom == nullptr) {
+        _bottom = &from_terminal(lattice.bottom());
+      }
+      return *_bottom;
     }
 
   }; // idd
@@ -499,7 +517,17 @@ namespace mtidd
     bool true_ref = true;
     bool false_ref = false;
 
+    //caching top and bottom as they are often called
+    idd<V, bool, lattice<bool>> const * _top = nullptr;
+    idd<V, bool, lattice<bool>> const * _bottom = nullptr;
+
   public:
+
+    ~idd_manager() {
+      for (auto iterator = cache.begin(); iterator != cache.end(); iterator++) {
+        delete(*iterator);
+      }
+    }
 
     //TODO change the ordering
 
@@ -562,6 +590,12 @@ namespace mtidd
       std::function<void (const idd<V, bool, lattice<bool>> *)> traverser = [&](const idd<V, bool, lattice<bool>>* x) { old_cache.erase(x); cache.insert(x); };
       keep.traverse(traverser);
       for (auto iterator = old_cache.begin(); iterator != old_cache.end(); iterator++) {
+        if (*iterator == _top) {
+          _top = nullptr;
+        }
+        if (*iterator == _bottom) {
+          _bottom = nullptr;
+        }
         delete(*iterator);
       }
     }
@@ -597,14 +631,18 @@ namespace mtidd
       return *result;
     }
 
-    //TODO not very efficient
-
     idd<V, bool, lattice<bool>> const & top() {
-      return internalize(new idd<V,bool,lattice<bool>>(this, true_index));
+      if (_top == nullptr) {
+        _top = &internalize(new idd<V,bool,lattice<bool>>(this, true_index));
+      }
+      return *_top;
     }
 
     idd<V, bool, lattice<bool>> const & bottom() {
-      return internalize(new idd<V,bool,lattice<bool>>(this, false_index));
+      if (_bottom == nullptr) {
+        _bottom = &internalize(new idd<V,bool,lattice<bool>>(this, false_index));
+      }
+      return *_bottom;
     }
 
   };
