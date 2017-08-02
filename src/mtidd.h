@@ -196,7 +196,51 @@ namespace mtidd
       }
     }
 
-  public:
+    T const & lhs_partial_overlaps1(std::map<V,interval> const & box,
+                                   std::map<V,half_interval> & overlaps) const {
+      if (is_terminal()) {
+        return manager->terminal_at(terminal_index);
+      } else {
+        V const & var = manager->variable_at(variable_index);
+        const interval var_intv = box.find(var)->second;
+        auto end = partition_iterator<idd<V,T,L>>::end(part);
+        auto first = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
+        auto second = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
+        second++;
+        half_interval const & hintv = first.left_bound();
+        if (!(ends(var_intv) <= upper_sentinel && hintv == upper_sentinel)) overlaps[var] = hintv;
+        return (*first)->lhs_partial_overlaps1(box, overlaps);
+      }
+    }
+
+    T const & rhs_partial_overlaps1(std::map<V,interval> const & box,
+                                   std::map<V,half_interval> & overlaps) const {
+      if (is_terminal()) {
+        return manager->terminal_at(terminal_index);
+      } else {
+        V const & var = manager->variable_at(variable_index);
+        const interval var_intv = box.find(var)->second;
+        auto end = partition_iterator<idd<V,T,L>>::end(part);
+        auto first = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
+        auto second = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
+        second++;
+        for (; second != end; first++, second++) {
+          half_interval const & hintv1 = first.left_bound();
+          half_interval const & hintv2 = second.left_bound();
+          if (hintv1 <= ends(var_intv) && ends(var_intv) <= hintv2) {
+            overlaps[var] = hintv1;
+            break;
+          }
+        }
+        if ((*first)->is_terminal()) {
+          return (*second)->rhs_partial_overlaps1(box, overlaps);
+        } else {
+          return (*first)->rhs_partial_overlaps1(box, overlaps);
+        }
+      }
+    }
+
+ public:
 
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
       computeHash();
@@ -307,6 +351,18 @@ namespace mtidd
       return terminals;
     }
 
+    T const & lhs_partial_overlaps(std::map<V,interval> const & box,
+                                  std::map<V,half_interval> & overlaps) const {
+      overlaps.clear();
+      return lhs_partial_overlaps1(box, overlaps);
+    }
+
+    T const & rhs_partial_overlaps(std::map<V,interval> const & box,
+                                  std::map<V,half_interval> & overlaps) const {
+      overlaps.clear();
+      return rhs_partial_overlaps1(box, overlaps);
+    }
+
     std::ostream & print(std::ostream & out, int indent = 0) const {
       for (int i = 0; i < indent; i++) out << " ";
       out << "idd(" << hash_value << ")";
@@ -392,6 +448,8 @@ namespace mtidd
     }
 
     //TODO change the ordering
+
+    L const & get_lattice() { return lattice; }
 
     int compare(V const & v1, V const & v2) {
       return variable_ordering.compare(v1, v2);
@@ -530,6 +588,8 @@ namespace mtidd
     }
 
     //TODO change the ordering
+
+    lattice<bool> const & get_lattice() { return lb; }
 
     int compare(V const & v1, V const & v2) {
       return variable_ordering.compare(v1, v2);

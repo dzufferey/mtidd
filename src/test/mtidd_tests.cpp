@@ -173,6 +173,7 @@ namespace mtidd {
     REQUIRE(contained.size() == 2);
     REQUIRE(contained.count(-1) > 0);
     REQUIRE(contained.count(999) > 0);
+
   }
 
   bool next_bool(uniform_int_distribution<int> & dist, default_random_engine & gen) {
@@ -239,6 +240,50 @@ namespace mtidd {
     steady_clock::time_point t2 = steady_clock::now();
     duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
     cout << "random test with " << dims << " dimensions and " << ops << " operations took " << time_span.count() << " seconds." << endl;
+  }
+
+  TEST_CASE("partial_covers") {
+    cout << "partial covers:" << endl;
+
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    mngr.internalize_variable(1);
+    mngr.internalize_variable(2);
+
+    map<int, interval> base_box;
+    base_box[0] = make_tuple(-10, Closed, 10, Closed);
+    base_box[1] = make_tuple(-20, Closed, 20, Closed);
+    base_box[2] = make_tuple(-30, Closed, 30, Closed);
+    idd<int, bool> const & dd1 = mngr.from_box(base_box, true, false);
+
+    map<int, interval> box1;
+    box1[0] = make_tuple(0, Closed, 50, Closed);
+    box1[1] = make_tuple(0, Closed, 100, Closed);
+    box1[2] = make_tuple(0, Closed, 150, Closed);
+
+    map<int, interval> box2;
+    box2[0] = make_tuple(-50, Closed, 10, Closed);
+    box2[1] = make_tuple(-100, Closed, 10, Closed);
+    box2[2] = make_tuple(-150, Closed, 10, Closed);
+
+    map<int, half_interval> lhs_overlaps;
+    bool const & term1 = dd1.lhs_partial_overlaps(box1, lhs_overlaps);
+    for (auto iterator = lhs_overlaps.begin(); iterator != lhs_overlaps.end(); iterator++) {
+        half_interval hintv = iterator->second;
+        cout << hintv << " ";
+    }
+    cout << term1 << endl;
+    REQUIRE(term1 == 1);
+
+    map<int, half_interval> rhs_overlaps;
+    bool const & term2 = dd1.rhs_partial_overlaps(box2, rhs_overlaps);
+    for (auto iterator = rhs_overlaps.begin(); iterator != rhs_overlaps.end(); iterator++) {
+        half_interval hintv = iterator->second;
+        cout << hintv << " ";
+    }
+    cout << term2 << endl;
+    REQUIRE(term1 == 1);
+
   }
 
 }

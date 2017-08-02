@@ -72,14 +72,21 @@ namespace mtidd
       ++(*this);
       return retval;
     }
+
     bool operator==(partition_iterator<A> const & other) const {
       return itr == other.itr;
     }
+
     bool operator!=(partition_iterator<A> const & other) const {
       return !(*this == other);
     }
+
     const A* operator*() const {
       return std::get<1>(*itr);
+    }
+
+    half_interval const & left_bound() const {
+        return std::get<0>(*itr);
     }
 
     static partition_iterator<A> end(partition<A> const & boundaries) {
@@ -107,6 +114,5 @@ namespace mtidd
     }
 
   };
-
 
 }
