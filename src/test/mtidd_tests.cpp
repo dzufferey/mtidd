@@ -261,28 +261,45 @@ namespace mtidd {
     box1[1] = make_tuple(0, Closed, 100, Closed);
     box1[2] = make_tuple(0, Closed, 150, Closed);
 
+    map<int, interval> lhs_overlaps1;
+    map<int, interval> rhs_overlaps1;
+    dd1.partial_overlaps(lhs_overlaps1, rhs_overlaps1, box1);
+
+    cout << "LHS:" << endl;
+    for (auto iterator = lhs_overlaps1.begin(); iterator != lhs_overlaps1.end(); iterator++) {
+      interval intv = iterator->second;
+      cout << intv << endl;
+    }
+
+    cout << "RHS:" << endl;
+    for (auto iterator = rhs_overlaps1.begin(); iterator != rhs_overlaps1.end(); iterator++) {
+      interval intv = iterator->second;
+      cout << intv << endl;
+    }
+
+    std::cout << "-----" << std::endl;
+    //
+
     map<int, interval> box2;
     box2[0] = make_tuple(-50, Closed, 10, Closed);
     box2[1] = make_tuple(-100, Closed, 10, Closed);
     box2[2] = make_tuple(-150, Closed, 10, Closed);
 
-    map<int, half_interval> lhs_overlaps;
-    bool const & term1 = dd1.lhs_partial_overlaps(box1, lhs_overlaps);
-    for (auto iterator = lhs_overlaps.begin(); iterator != lhs_overlaps.end(); iterator++) {
-        half_interval hintv = iterator->second;
-        cout << hintv << " ";
-    }
-    cout << term1 << endl;
-    REQUIRE(term1 == 1);
+    map<int, interval> lhs_overlaps2;
+    map<int, interval> rhs_overlaps2;
+    dd1.partial_overlaps(lhs_overlaps2, rhs_overlaps2, box2);
 
-    map<int, half_interval> rhs_overlaps;
-    bool const & term2 = dd1.rhs_partial_overlaps(box2, rhs_overlaps);
-    for (auto iterator = rhs_overlaps.begin(); iterator != rhs_overlaps.end(); iterator++) {
-        half_interval hintv = iterator->second;
-        cout << hintv << " ";
+    cout << "LHS 1:" << endl;
+    for (auto iterator = lhs_overlaps2.begin(); iterator != lhs_overlaps2.end(); iterator++) {
+      interval intv = iterator->second;
+      cout << intv << endl;
     }
-    cout << term2 << endl;
-    REQUIRE(term1 == 1);
+
+    cout << "RHS 2:" << endl;
+    for (auto iterator = rhs_overlaps2.begin(); iterator != rhs_overlaps2.end(); iterator++) {
+      interval intv = iterator->second;
+      cout << intv << endl;
+    }
 
   }
 

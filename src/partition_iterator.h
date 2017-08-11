@@ -85,8 +85,8 @@ namespace mtidd
       return std::get<1>(*itr);
     }
 
-    half_interval const & left_bound() const {
-        return std::get<0>(*itr);
+    half_interval const & lower_bound() const {
+        return lb;
     }
 
     static partition_iterator<A> end(partition<A> const & boundaries) {

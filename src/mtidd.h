@@ -164,7 +164,7 @@ namespace mtidd
       }
     }
 
-      void traverse1(std::function<void (const idd<V, T, L> *)> apply_on_element, std::unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache) const {
+      void traverse1(std::function<void (const idd<V, T, L> *)> apply_on_element, std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache) const {
       if (cache.find(this) == cache.end()) {
         apply_on_element(this);
         cache.insert(this);
@@ -177,14 +177,14 @@ namespace mtidd
     }
 
     void inf_terminal_cover1(std::map<V,interval> const & box,
-                             std::unordered_set<idd<V,T,L> const*,
+                             std::unordered_set<idd<V,T,L> const *,
                                                 idd_hash<V,T,L>,
                                                 idd_equalTo<V,T,L>> & cache,
                              std::unordered_set<T> & terminals) const {
       if (cache.find(this) == cache.end()) {
         cache.insert(this);
-        if(!is_terminal()) {
-          V const& var = manager->variable_at(variable_index);
+        if (!is_terminal()) {
+          V const & var = manager->variable_at(variable_index);
           const interval var_intv = box.find(var)->second;
           auto end = partition_iterator<idd<V,T,L>>::end(part);
           for (auto iterator = partition_iterator<idd<V,T,L>>::covers(part,var_intv); iterator != end; ++iterator) {
@@ -196,47 +196,82 @@ namespace mtidd
       }
     }
 
-    T const & lhs_partial_overlaps1(std::map<V,interval> const & box,
-                                   std::map<V,half_interval> & overlaps) const {
-      if (is_terminal()) {
-        return manager->terminal_at(terminal_index);
-      } else {
-        V const & var = manager->variable_at(variable_index);
-        const interval var_intv = box.find(var)->second;
-        auto end = partition_iterator<idd<V,T,L>>::end(part);
-        auto first = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
-        auto second = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
-        second++;
-        half_interval const & hintv = first.left_bound();
-        if (!(ends(var_intv) <= upper_sentinel && hintv == upper_sentinel)) overlaps[var] = hintv;
-        return (*first)->lhs_partial_overlaps1(box, overlaps);
+    void partial_overlaps1(std::map<V,interval> & lhs_overlaps,
+                           std::map<V,interval> & rhs_overlaps,
+                           std::map<V,interval> const & box,
+                           std::unordered_set<idd<V,T,L> const *,
+                                              idd_hash<V,T,L>,
+                                              idd_equalTo<V,T,L>> & cache) const {
+      if (!(cache.find(this) == cache.end())) return;
+      cache.insert(this);
+      if (is_terminal()) return;
+
+      V const & var = manager->variable_at(variable_index);
+      auto mb_intv = box.find(var);
+      assert(mb_intv != box.end());
+      interval cintv = mb_intv->second;
+      half_interval curr_lb = std::make_tuple(std::get<0>(cintv), std::get<1>(cintv));
+      half_interval curr_ub = std::make_tuple(std::get<2>(cintv), std::get<3>(cintv));
+
+      auto first = part.begin();
+      auto second = part.begin();
+      second++;
+
+      // The first scenario for the LHS is the lower sentinel.
+      if (curr_lb <= std::get<0>(*first)) {
+        lhs_overlaps[var] = make_interval(lower_sentinel, std::get<0>(*first));
+      }
+
+      for (; second != part.end(); first++, second++) {
+        std::get<1>(*first)->partial_overlaps1(lhs_overlaps, rhs_overlaps, box, cache);
+
+        half_interval const & hintv1 = std::get<0>(*first);
+        half_interval const & hintv2 = std::get<0>(*second);
+
+        // This qualifies as a LHS partial cover.
+        if (hintv1 <= curr_lb && curr_lb <= hintv2) {
+          auto mb_lhs_intv = lhs_overlaps.find(var);
+          // In the cache?
+          if (mb_lhs_intv != lhs_overlaps.end()) {
+            // We are more RIGHT than the previous.
+            if (ends(mb_lhs_intv->second) < hintv2) {
+              lhs_overlaps[var] = make_interval(hintv1, hintv2);
+            }
+          } else {
+            lhs_overlaps[var] = make_interval(hintv1, hintv2);
+          }
+        }
+
+        // This qualifies as a RHS partial cover.
+        if (hintv1 <= curr_ub && curr_ub <= hintv2) {
+          auto mb_rhs_intv = rhs_overlaps.find(var);
+          // In the cache?
+          if (mb_rhs_intv != rhs_overlaps.end()) {
+            // We are more LEFT than the previous.
+            if (starts_after(mb_rhs_intv->second) < hintv1) {
+              rhs_overlaps[var] = make_interval(hintv1, hintv2);
+            }
+          } else {
+            rhs_overlaps[var] = make_interval(hintv1, hintv2);
+          }
+        }
       }
     }
 
-    T const & rhs_partial_overlaps1(std::map<V,interval> const & box,
-                                   std::map<V,half_interval> & overlaps) const {
-      if (is_terminal()) {
-        return manager->terminal_at(terminal_index);
-      } else {
-        V const & var = manager->variable_at(variable_index);
-        const interval var_intv = box.find(var)->second;
-        auto end = partition_iterator<idd<V,T,L>>::end(part);
-        auto first = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
-        auto second = partition_iterator<idd<V,T,L>>::covers(part, var_intv);
-        second++;
-        for (; second != end; first++, second++) {
-          half_interval const & hintv1 = first.left_bound();
-          half_interval const & hintv2 = second.left_bound();
-          if (hintv1 <= ends(var_intv) && ends(var_intv) <= hintv2) {
-            overlaps[var] = hintv1;
-            break;
+    int idd_size1(std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache) const {
+      if (cache.find(this) == cache.end()) {
+        cache.insert(this);
+        if (!is_terminal()) {
+          int sum = 0;
+          for (auto iterator = part.begin(); iterator != part.end(); iterator++) {
+            sum += std::get<1>(*iterator)->idd_size1(cache);
           }
-        }
-        if ((*first)->is_terminal()) {
-          return (*second)->rhs_partial_overlaps1(box, overlaps);
+          return sum;
         } else {
-          return (*first)->rhs_partial_overlaps1(box, overlaps);
+          return 1;
         }
+      } else {
+        return 0;
       }
     }
 
@@ -345,22 +380,24 @@ namespace mtidd
     }
 
     std::unordered_set<T> inf_terminal_cover(std::map<V,interval> const& box) const {
-      std::unordered_set<idd<V,T,L> const*, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+      std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
       std::unordered_set<T> terminals;
       inf_terminal_cover1(box, cache, terminals);
       return terminals;
     }
 
-    T const & lhs_partial_overlaps(std::map<V,interval> const & box,
-                                  std::map<V,half_interval> & overlaps) const {
-      overlaps.clear();
-      return lhs_partial_overlaps1(box, overlaps);
+    void partial_overlaps(std::map<V,interval> & lhs_overlaps,
+                          std::map<V,interval> & rhs_overlaps,
+                          std::map<V,interval> const & box) const {
+      lhs_overlaps.clear();
+      rhs_overlaps.clear();
+      std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+      partial_overlaps1(lhs_overlaps, rhs_overlaps, box, cache);
     }
 
-    T const & rhs_partial_overlaps(std::map<V,interval> const & box,
-                                  std::map<V,half_interval> & overlaps) const {
-      overlaps.clear();
-      return rhs_partial_overlaps1(box, overlaps);
+    int idd_size() {
+        std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+        return idd_size1(cache);
     }
 
     std::ostream & print(std::ostream & out, int indent = 0) const {
