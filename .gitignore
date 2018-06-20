@@ -2,6 +2,9 @@
 build/
 mtidd_config.h
 
+#bazel
+bazel-*
+
 # Compiled Object files
 *.slo
 *.lo

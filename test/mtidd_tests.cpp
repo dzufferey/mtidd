@@ -6,7 +6,7 @@
 
 //tell Catch to provide a main (only once pre cpp)
 #define CATCH_CONFIG_MAIN
-#include "catch/catch.hpp"
+#include "catch.hpp"
 
 using namespace std;
 
