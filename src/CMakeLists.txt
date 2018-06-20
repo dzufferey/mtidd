@@ -41,7 +41,7 @@ file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
 include(ExternalProject)
 
 ExternalProject_Add(CATCH
-  URL https://github.com/philsquared/Catch/releases/download/v1.9.5/catch.hpp
+  URL https://github.com/catchorg/Catch2/releases/download/v2.2.3/catch.hpp
   DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/include/catch
   DOWNLOAD_NO_EXTRACT 1
   CONFIGURE_COMMAND ""
