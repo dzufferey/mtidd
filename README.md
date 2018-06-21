@@ -9,10 +9,9 @@ Nothing working yet.
 
 ## Compiling
 
+You need to install [bazel](https://bazel.build) and have a modern C++ compiler.
+
 ```sh
-mkdir build
-cd build
-cmake ../src
-make
-make test
+bazel build //...
+bazel test //...
 ```

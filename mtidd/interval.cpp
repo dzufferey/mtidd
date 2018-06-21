@@ -116,7 +116,7 @@ namespace mtidd
   
   half_interval starts_after(const interval& i) {
     double value = get<0>(i);
-    assert(value != numeric_limits<double>::infinity() && value != -numeric_limits<double>::infinity());
+    assert(value != numeric_limits<double>::infinity());
     return make_tuple(value, complement(get<1>(i)));
   }
 

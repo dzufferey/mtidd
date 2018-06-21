@@ -1,4 +1,4 @@
-#include "mtidd.h"
+#include "mtidd/mtidd.h"
 
 #include <iostream>
 #include <random>
@@ -6,7 +6,7 @@
 
 //tell Catch to provide a main (only once pre cpp)
 #define CATCH_CONFIG_MAIN
-#include "catch/catch.hpp"
+#include "catch2/catch.hpp"
 
 using namespace std;
 
@@ -144,10 +144,10 @@ namespace mtidd {
 
   TEST_CASE("box contains") {
     idd_manager<int, int> mngr;
-    int idx0 = mngr.internalize_variable(0);
-    int idx1 = mngr.internalize_variable(1);
-    int idx2 = mngr.internalize_variable(2);
-    int idx3 = mngr.internalize_variable(3);
+    mngr.internalize_variable(0);
+    mngr.internalize_variable(1);
+    mngr.internalize_variable(2);
+    mngr.internalize_variable(3);
 
     map<int, interval> idd_box;
     idd_box[0] = make_tuple(-2, Closed, 2, Closed);

@@ -9,7 +9,7 @@ namespace mtidd
   class partition_iterator: public std::iterator<std::forward_iterator_tag, const A*> {
 
     private:
-    typedef typename std::list<std::tuple<half_interval, const A *>>::const_iterator boundaries_iterator;
+    typedef typename partition<A>::const_iterator boundaries_iterator;
     typedef std::function<bool (half_interval const & lower_bound, half_interval const & upper_bound, const A *)> filter_fun;
 
     filter_fun filter;
@@ -17,11 +17,19 @@ namespace mtidd
     boundaries_iterator itr;
     boundaries_iterator last;
 
+    void itr_next(){
+      auto b = std::get<0>(*itr);
+      // it is not possible to complement the upper_sentinel, we are at the end
+      if (b != upper_sentinel) {
+        lb = complement(b);
+      }
+      ++itr;
+    }
+
     void until_filter(){
       // find the first element that pass filter
       while(itr != last && !filter(lb, std::get<0>(*itr), std::get<1>(*itr))) {
-        lb = complement(std::get<0>(*itr));
-        ++itr;
+        itr_next();
       }
     }
 
@@ -60,8 +68,7 @@ namespace mtidd
 
     partition_iterator<A>& operator++() {
       if (itr != last) {
-        lb = complement(std::get<0>(*itr));
-        ++itr;
+        itr_next();
         until_filter();
       }
       return *this;
