@@ -1,8 +1,8 @@
-#include "mtidd.h"
+#include "mtidd/mtidd.h"
 
 //tell Catch to provide a main (only once pre cpp)
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "catch2/catch.hpp"
 
 using namespace std;
 

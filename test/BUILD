@@ -1,11 +1,5 @@
 load("//tools:mtidd.bzl", "mtidd_test")
 
-cc_library(
-    name = "catch2",
-    hdrs = ["@catch2Download//file"],
-    visibility = ["//visibility:private"],
-)
-
 mtidd_test(
     name = "internalizer_tests",
 )

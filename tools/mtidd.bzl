@@ -13,8 +13,8 @@ def mtidd_test(
         size = size,
         srcs = srcs,
         deps = [
-            "//src:mtidd",
-            ":catch2"
+            "//mtidd:mtidd",
+            "@catch2git//:catch2"
         ],
         **kwargs
     )

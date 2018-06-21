@@ -1,10 +1,9 @@
-#include "partition_iterator.h"
+#include "mtidd/mtidd.h"
 
 #include <iostream>
 
-//tell Catch to provide a main (only once pre cpp)
 #define CATCH_CONFIG_MAIN
-#include "catch/catch.hpp"
+#include "catch2/catch.hpp"
 
 using namespace std;
 
