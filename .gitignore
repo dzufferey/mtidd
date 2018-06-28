@@ -1,7 +1,3 @@
-# cmake build tree
-build/
-mtidd_config.h
-
 #bazel
 bazel-*
 
