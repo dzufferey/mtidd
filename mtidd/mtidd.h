@@ -13,38 +13,39 @@
 #include "partition.h"
 #include "partition_iterator.h"
 #include "utils.h"
+#include "cache.h"
 
 //TODO idd as nested class in manager to reduce the number of type arguments
 
 namespace mtidd
 {
 
-  template< class V, // variable
-            class T, // terminal
-            class L = struct lattice<T> >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L = struct lattice<T> >
   class idd_manager;
 
   // to cache the result of commutative binary operations
-  template< class V, // variable
-            class T, // terminal
-            class L = struct lattice<T> >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L = struct lattice<T> >
   class operation_cache;
 
   // to use idd* with unordered_set
-  template< class V, // variable
-            class T, // terminal
-            class L = struct lattice<T> >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L = struct lattice<T> >
   struct idd_hash;
 
   // to use idd* with unordered_set
-  template< class V, // variable
-            class T, // terminal
-            class L = struct lattice<T> >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L = struct lattice<T> >
   struct idd_equalTo;
 
-  template< class V, // variable
-            class T, // terminal
-            class L = struct lattice<T> >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L = struct lattice<T> >
   class idd
   {
   private:
@@ -59,6 +60,10 @@ namespace mtidd
     // invariant:
     // variable = null ⇒ part = null && terminal ≠ null
     // variable ≠ null ⇒ part ≠ null && terminal = null
+
+    typedef std::unordered_set<idd<V,T,L> const *,
+                               idd_hash<V,T,L>,
+                               idd_equalTo<V,T,L>> idd_set;
 
     void computeHash() {
       //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
@@ -108,7 +113,7 @@ namespace mtidd
                                   std::function<T (T const &, T const &)> combine_elements,
                                   operation_cache<V, T, L> & cache) const {
       auto cached = cache.lookup(this, &rhs);
-      if (cached!= nullptr) {
+      if (cached != nullptr) {
         return *cached;
       } else if (is_terminal()) {
         if (rhs.is_terminal()) {
@@ -164,7 +169,7 @@ namespace mtidd
       }
     }
 
-      void traverse1(std::function<void (const idd<V, T, L> *)> apply_on_element, std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache) const {
+    void traverse1(std::function<void (const idd<V, T, L> *)> apply_on_element, idd_set & cache) const {
       if (cache.find(this) == cache.end()) {
         apply_on_element(this);
         cache.insert(this);
@@ -177,9 +182,7 @@ namespace mtidd
     }
 
     void inf_terminal_cover1(std::map<V,interval> const & box,
-                             std::unordered_set<idd<V,T,L> const *,
-                                                idd_hash<V,T,L>,
-                                                idd_equalTo<V,T,L>> & cache,
+                             idd_set & cache,
                              std::unordered_set<T> & terminals) const {
       if (cache.find(this) == cache.end()) {
         cache.insert(this);
@@ -199,9 +202,7 @@ namespace mtidd
     void partial_overlaps1(std::map<V,interval> & lhs_overlaps,
                            std::map<V,interval> & rhs_overlaps,
                            std::map<V,interval> const & box,
-                           std::unordered_set<idd<V,T,L> const *,
-                                              idd_hash<V,T,L>,
-                                              idd_equalTo<V,T,L>> & cache) const {
+                           idd_set & cache) const {
       if (!(cache.find(this) == cache.end())) return;
       cache.insert(this);
       if (is_terminal()) return;
@@ -258,7 +259,7 @@ namespace mtidd
       }
     }
 
-    int idd_size1(std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> & cache) const {
+    int idd_size1(idd_set & cache) const {
       if (cache.find(this) == cache.end()) {
         cache.insert(this);
         if (!is_terminal()) {
@@ -322,7 +323,7 @@ namespace mtidd
     }
 
     // only one step local, assume decendant are internalized in the manager
-    bool compare_structural(idd<V, T, L> const& rhs) const {
+    bool equals_structural(idd<V, T, L> const& rhs) const {
       // only compare IDD from the same manager!
       assert(manager == rhs.manager);
 
@@ -343,9 +344,24 @@ namespace mtidd
       return this != (&rhs);
     }
 
+    lattice_compare compare(idd<V, T, L> const& rhs) const {
+      assert(manager == rhs.manager);
+      if (*this == rhs) {
+        return Equal;
+      } else {
+        // XXX
+        throw "TODO compare";
+      }
+    }
+
     bool operator<(idd<V, T, L> const& rhs) const {
-      // XXX
-      throw "TODO inclusion check";
+      lattice_compare c = compare(rhs);
+      return c == Smaller;
+    }
+
+    bool operator<=(idd<V, T, L> const& rhs) const {
+      lattice_compare c = compare(rhs);
+      return c == Smaller || c == Equal;
     }
 
     const T& lookup(std::map<V,double> const& point) const {
@@ -375,12 +391,12 @@ namespace mtidd
 
     // take sharing into account and visit nodes just once
     void traverse(std::function<void (const idd<V, T, L> *)> apply_on_element) const {
-      std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+      idd_set cache;
       traverse1(apply_on_element, cache);
     }
 
     std::unordered_set<T> inf_terminal_cover(std::map<V,interval> const& box) const {
-      std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+      idd_set cache;
       std::unordered_set<T> terminals;
       inf_terminal_cover1(box, cache, terminals);
       return terminals;
@@ -391,13 +407,13 @@ namespace mtidd
                           std::map<V,interval> const & box) const {
       lhs_overlaps.clear();
       rhs_overlaps.clear();
-      std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
+      idd_set cache;
       partial_overlaps1(lhs_overlaps, rhs_overlaps, box, cache);
     }
 
     int idd_size() {
-        std::unordered_set<idd<V,T,L> const *, idd_hash<V,T,L>, idd_equalTo<V,T,L>> cache;
-        return idd_size1(cache);
+      idd_set cache;
+      return idd_size1(cache);
     }
 
     std::ostream & print(std::ostream & out, int indent = 0) const {
@@ -421,25 +437,7 @@ namespace mtidd
 
   };
 
-  template< class T, class L = class lattice<T> >
-  struct lattice_hash {
-    L lattice; // = L();
-    size_t operator()(T const & t) const
-    {
-      return lattice.hash(t);
-    }
-  };
-
-  template< class T, class L = struct lattice<T> >
-  struct lattice_equalTo {
-    L lattice; // = L();
-    size_t operator()(T const & a, T const & b) const
-    {
-      return lattice.equal(a, b);
-    }
-  };
-
-  template< class V, class T, class L >
+  template< typename V, typename T, typename L >
   struct idd_hash {
     size_t operator()(idd<V,T,L> const * s) const
     {
@@ -447,18 +445,18 @@ namespace mtidd
     }
   };
 
-  template< class V, class T, class L >
+  template< typename V, typename T, typename L >
   struct idd_equalTo {
     size_t operator()(idd<V,T,L> const * lhs, idd<V,T,L> const * rhs) const
     {
-      return lhs->compare_structural(*rhs);
+      return lhs->equals_structural(*rhs);
     }
   };
 
 
-  template< class V, // variable
-            class T, // terminal
-            class L >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L >
   class idd_manager
   {
   private:
@@ -594,7 +592,7 @@ namespace mtidd
 
   }; // idd
 
-  template< class V > // variable
+  template< typename V > // variable
   class idd_manager<V, bool, lattice<bool>>
   {
   private:
@@ -744,60 +742,33 @@ namespace mtidd
 
   };
 
-  template< class V, // variable
-            class T, // terminal
-            class L = struct lattice<T> >
+  template< typename V, // variable
+            typename T, // terminal
+            typename L = struct lattice<T> >
   struct idd_pair_hash {
     size_t operator()(std::tuple<idd<V,T,L> const *, idd<V,T,L> const * > const & s) const
     {
-      return combine_two_hashes( std::get<0>(s)->hash(),  std::get<0>(s)->hash());
+      return combine_two_hashes( std::get<0>(s)->hash(),  std::get<1>(s)->hash());
     }
   };
 
-  template< class V, // variable
-            class T, // terminal
-            class L>
-  class operation_cache {
-  private:
-
-    typedef idd<V,T,L> const * value_t;
-    typedef std::tuple<value_t, value_t> key_t;
-
-    std::unordered_map<key_t, value_t, idd_pair_hash<V,T,L>> cache;
+  template< typename V, // variable
+            typename T, // terminal
+            typename L >
+  class operation_cache: public cache<idd<V,T,L> const *, idd<V,T,L> const *, true, idd_hash<V,T,L>> {
 
   public:
 
-    value_t lookup(value_t lhs, value_t rhs) {
-      key_t entry;
-      if (lhs->hash() <= rhs->hash()) {
-        entry = std::make_tuple(lhs, rhs);
-      } else {
-        entry = std::make_tuple(lhs, rhs);
-      }
-      auto found = cache.find(entry);
-      if (found != cache.end()) {
-        return found->second;
-      } else {
-        return nullptr;
-      }
-    }
-
-    void insert(value_t lhs, value_t rhs, value_t result) {
-      key_t entry;
-      if (lhs->hash() <= rhs->hash()) {
-        entry = std::make_tuple(lhs, rhs);
-      } else {
-        entry = std::make_tuple(lhs, rhs);
-      }
-      cache[entry] = result;
-    }
+    operation_cache(): cache<idd<V,T,L> const *, idd<V,T,L> const *, true, idd_hash<V,T,L>>(nullptr) { }
 
   };
 
 
   // printing functions
 
-  template<class V, class T, class L>
+  template< typename V, // variable
+            typename T, // terminal
+            typename L >
   std::ostream & operator<<(std::ostream & out, const idd<V,T,L>& dd) {
     return dd.print(out);
   }

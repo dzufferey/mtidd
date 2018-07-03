@@ -3,19 +3,13 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "utils.h"
-
 namespace mtidd
 {
-
-  extern size_t mhash(const long x);
 
   // comparison in a partial ordering
   typedef enum { Equal, Smaller, Greater, Different} lattice_compare;
 
-  //TODO could we use concept to get rid of the virtual part
-
-  // struct that contains the methods to
+  // struct that contains the methods
   template<typename T>
   struct lattice {
     T bottom() const;
@@ -29,7 +23,26 @@ namespace mtidd
     size_t hash(const T&) const;
   };
 
+  // helpers to use in standard containers
+
+  template< typename T, typename L = struct lattice<T> >
+  struct lattice_hash {
+    size_t operator()(T const & t) const
+    {
+      return L{}.hash(t);
+    }
+  };
+
+  template< typename T, typename L = struct lattice<T> >
+  struct lattice_equalTo {
+    size_t operator()(T const & a, T const & b) const
+    {
+      return L{}.equal(a, b);
+    }
+  };
+
   // Simple instances of Lattices
+
   template<>
   struct lattice<bool> {
   public:
@@ -90,6 +103,7 @@ namespace mtidd
     size_t hash(const double& x) const;
   };
 
-  // TODO an example for set<T>
+  // TODO an example for std::set<T>
+  // problem: top depends on T
 
 } // end namespace

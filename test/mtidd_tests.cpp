@@ -17,9 +17,9 @@ namespace mtidd {
     REQUIRE(mngr.top() == mngr.top());
     REQUIRE(mngr.bottom() == mngr.bottom());
     REQUIRE(mngr.top() != mngr.bottom());
-    REQUIRE(mngr.top().compare_structural(mngr.top()));
-    REQUIRE(mngr.bottom().compare_structural(mngr.bottom()));
-    REQUIRE(!mngr.top().compare_structural(mngr.bottom()));
+    REQUIRE(mngr.top().equals_structural(mngr.top()));
+    REQUIRE(mngr.bottom().equals_structural(mngr.bottom()));
+    REQUIRE(!mngr.top().equals_structural(mngr.bottom()));
   }
 
   TEST_CASE("internalize") {
@@ -67,7 +67,7 @@ namespace mtidd {
     REQUIRE( dd.lookup(point));
     idd<int, bool> const & dd_copy = mngr.from_box(box, true, false);
     REQUIRE(dd == dd_copy);
-    REQUIRE(dd.compare_structural(dd_copy));
+    REQUIRE(dd.equals_structural(dd_copy));
     REQUIRE(dd.hash() == dd_copy.hash());
     idd<int, bool> const & dd_inter = dd & dd;
     REQUIRE(dd == dd_inter);

@@ -13,6 +13,10 @@ mtidd_test(
 )
 
 mtidd_test(
+    name = "cache_tests",
+)
+
+mtidd_test(
     name = "mtidd_tests",
 )
 

@@ -12,6 +12,7 @@ cc_library(
         "partition.h",
         "partition_iterator.h",
         "utils.h",
+        "cache.h",
     ],
     hdrs = [
         "mtidd.h",
