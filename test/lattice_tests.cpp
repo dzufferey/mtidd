@@ -7,7 +7,46 @@
 using namespace std;
 
 namespace mtidd {
-  
+
+  TEST_CASE("lattice_compare") {
+    REQUIRE(flip(Equal)     == Equal);
+    REQUIRE(flip(Different) == Different);
+    REQUIRE(flip(Smaller)   == Greater);
+    REQUIRE(flip(Greater)   == Smaller);
+    REQUIRE((Equal      &&  Equal)      == Equal);
+    REQUIRE((Equal      &&  Greater)    == Greater);
+    REQUIRE((Equal      &&  Smaller)    == Smaller);
+    REQUIRE((Equal      &&  Different)  == Different);
+    REQUIRE((Greater    &&  Equal)      == Greater);
+    REQUIRE((Greater    &&  Greater)    == Greater);
+    REQUIRE((Greater    &&  Smaller)    == Different);
+    REQUIRE((Greater    &&  Different)  == Different);
+    REQUIRE((Smaller    &&  Equal)      == Smaller);
+    REQUIRE((Smaller    &&  Greater)    == Different);
+    REQUIRE((Smaller    &&  Smaller)    == Smaller);
+    REQUIRE((Smaller    &&  Different)  == Different);
+    REQUIRE((Different  &&  Equal)      == Different);
+    REQUIRE((Different  &&  Greater)    == Different);
+    REQUIRE((Different  &&  Smaller)    == Different);
+    REQUIRE((Different  &&  Different)  == Different);
+    REQUIRE((Equal      ||  Equal)      == Equal);
+    REQUIRE((Equal      ||  Greater)    == Equal);
+    REQUIRE((Equal      ||  Smaller)    == Equal);
+    REQUIRE((Equal      ||  Different)  == Equal);
+    REQUIRE((Greater    ||  Equal)      == Equal);
+    REQUIRE((Greater    ||  Greater)    == Greater);
+    REQUIRE((Greater    ||  Smaller)    == Equal);
+    REQUIRE((Greater    ||  Different)  == Greater);
+    REQUIRE((Smaller    ||  Equal)      == Equal);
+    REQUIRE((Smaller    ||  Greater)    == Equal);
+    REQUIRE((Smaller    ||  Smaller)    == Smaller);
+    REQUIRE((Smaller    ||  Different)  == Smaller);
+    REQUIRE((Different  ||  Equal)      == Equal);
+    REQUIRE((Different  ||  Greater)    == Greater);
+    REQUIRE((Different  ||  Smaller)    == Smaller);
+    REQUIRE((Different  ||  Different)  == Different);
+  }
+
   TEST_CASE("boolean lattice") {
     lattice<bool> b;
     REQUIRE(b.top());

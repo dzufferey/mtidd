@@ -9,6 +9,12 @@ namespace mtidd
   // comparison in a partial ordering
   typedef enum { Equal, Smaller, Greater, Different} lattice_compare;
 
+  lattice_compare flip(lattice_compare c);
+
+  lattice_compare operator &&(lattice_compare lhs, lattice_compare rhs);
+
+  lattice_compare operator ||(lattice_compare lhs, lattice_compare rhs);
+
   // struct that contains the methods
   template<typename T>
   struct lattice {

@@ -9,6 +9,32 @@
 namespace mtidd
 {
 
+  lattice_compare flip(lattice_compare c) {
+    if (c == Smaller) return Greater;
+    else if (c == Greater) return Smaller;
+    else return c;
+  }
+
+  lattice_compare operator &&(lattice_compare lhs, lattice_compare rhs) {
+    if (lhs == rhs || rhs == Equal) {
+      return lhs;
+    } else if (lhs == Equal) {
+      return rhs;
+    } else {
+      return Different;
+    }
+  }
+
+  lattice_compare operator ||(lattice_compare lhs, lattice_compare rhs) {
+    if (lhs == rhs || rhs == Different) {
+      return lhs;
+    } else if (lhs == Different) {
+      return rhs;
+    } else {
+      return Equal;
+    }
+  }
+
   bool lattice<bool>::bottom() const { return false; }
   bool lattice<bool>::top() const { return true; }
 

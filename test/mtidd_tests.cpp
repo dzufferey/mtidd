@@ -86,14 +86,36 @@ namespace mtidd {
     //dd1.print(cout);
     //cout << endl << "dd2" << endl;
     //dd2.print(cout);
+    REQUIRE(mngr.bottom().compare(dd1) == Smaller);
+    REQUIRE(mngr.bottom().compare(dd2) == Smaller);
+    REQUIRE(dd1.compare(mngr.bottom()) == Greater);
+    REQUIRE(dd2.compare(mngr.bottom()) == Greater);
+    REQUIRE(mngr.top().compare(dd1) == Greater);
+    REQUIRE(mngr.top().compare(dd2) == Greater);
+    REQUIRE(dd1.compare(mngr.top()) == Smaller);
+    REQUIRE(dd2.compare(mngr.top()) == Smaller);
+    REQUIRE(dd1.compare(dd2) == Different);
+    REQUIRE(dd2.compare(dd1) == Different);
+    //
     idd<int, bool> const & dd_inter = dd1 & dd2;
     //cout << endl << "dd_inter" << endl;
     //dd_inter.print(cout);
     REQUIRE(mngr.bottom() == dd_inter);
+    REQUIRE(dd_inter.compare(dd1) == Smaller);
+    REQUIRE(dd1.compare(dd_inter) == Greater);
+    REQUIRE(dd_inter.compare(dd2) == Smaller);
+    REQUIRE(dd2.compare(dd_inter) == Greater);
+    REQUIRE(mngr.bottom().compare(dd_inter) == Equal);
+    //
     idd<int, bool> const & dd_union = dd1 | dd2;
     //cout << endl << "dd_union" << endl;
     //dd_union.print(cout);
     REQUIRE(mngr.top() == dd_union);
+    REQUIRE(dd_union.compare(dd1) == Greater);
+    REQUIRE(dd1.compare(dd_union) == Smaller);
+    REQUIRE(dd_union.compare(dd2) == Greater);
+    REQUIRE(dd2.compare(dd_union) == Smaller);
+    REQUIRE(mngr.top().compare(dd_union) == Equal);
   }
 
   TEST_CASE("operations 01") {
@@ -105,10 +127,33 @@ namespace mtidd {
     box[1] = make_tuple(-20, Closed, 10, Closed);
     idd<int, bool> const & dd1 = mngr.from_box(box, true, false);
     idd<int, bool> const & dd2 = mngr.from_box(box, false, true);
+    REQUIRE(mngr.bottom().compare(dd1) == Smaller);
+    REQUIRE(mngr.bottom().compare(dd2) == Smaller);
+    REQUIRE(dd1.compare(mngr.bottom()) == Greater);
+    REQUIRE(dd2.compare(mngr.bottom()) == Greater);
+    REQUIRE(mngr.top().compare(dd1) == Greater);
+    REQUIRE(mngr.top().compare(dd2) == Greater);
+    REQUIRE(dd1.compare(mngr.top()) == Smaller);
+    REQUIRE(dd2.compare(mngr.top()) == Smaller);
+    REQUIRE(dd1.compare(dd2) == Different);
+    REQUIRE(dd2.compare(dd1) == Different);
+    //
     idd<int, bool> const & dd_inter = dd1 & dd2;
     REQUIRE(mngr.bottom() == dd_inter);
+    REQUIRE(mngr.bottom() == dd_inter);
+    REQUIRE(dd_inter.compare(dd1) == Smaller);
+    REQUIRE(dd1.compare(dd_inter) == Greater);
+    REQUIRE(dd_inter.compare(dd2) == Smaller);
+    REQUIRE(dd2.compare(dd_inter) == Greater);
+    REQUIRE(mngr.bottom().compare(dd_inter) == Equal);
+    //
     idd<int, bool> const & dd_union = dd1 | dd2;
     REQUIRE(mngr.top() == dd_union);
+    REQUIRE(dd_union.compare(dd1) == Greater);
+    REQUIRE(dd1.compare(dd_union) == Smaller);
+    REQUIRE(dd_union.compare(dd2) == Greater);
+    REQUIRE(dd2.compare(dd_union) == Smaller);
+    REQUIRE(mngr.top().compare(dd_union) == Equal);
   }
 
   TEST_CASE("traverse caching") {

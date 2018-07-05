@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <iostream>
 
 #include "internalizer.h"
 #include "lattice.h"
@@ -24,12 +25,6 @@ namespace mtidd
             typename T, // terminal
             typename L = struct lattice<T> >
   class idd_manager;
-
-  // to cache the result of commutative binary operations
-  template< typename V, // variable
-            typename T, // terminal
-            typename L = struct lattice<T> >
-  class operation_cache;
 
   // to use idd* with unordered_set
   template< typename V, // variable
@@ -64,6 +59,11 @@ namespace mtidd
     typedef std::unordered_set<idd<V,T,L> const *,
                                idd_hash<V,T,L>,
                                idd_equalTo<V,T,L>> idd_set;
+
+    template< typename R, bool commutative = false>
+    using operation_cache = cache<idd<V,T,L> const *, R, commutative, idd_hash<V,T,L>>;
+
+    typedef operation_cache<idd<V,T,L> const *, true> operation_cache_idd;
 
     void computeHash() {
       //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
@@ -111,7 +111,7 @@ namespace mtidd
 
     idd<V, T, L> const & combine1(idd<V, T, L> const& rhs,
                                   std::function<T (T const &, T const &)> combine_elements,
-                                  operation_cache<V, T, L> & cache) const {
+                                  operation_cache_idd & cache) const {
       auto cached = cache.lookup(this, &rhs);
       if (cached != nullptr) {
         return *cached;
@@ -276,6 +276,65 @@ namespace mtidd
       }
     }
 
+    lattice_compare compare1(idd<V, T, L> const & rhs, operation_cache<lattice_compare> & cache) const {
+      if (*this == rhs) {
+        return Equal;
+      } else if (cache.contains(this, &rhs)) {
+         return cache.lookup(this, &rhs);
+      } else {
+        lattice_compare result = Equal;
+        if (is_terminal()) {
+          if (rhs.is_terminal()) {
+            T const & left = manager->terminal_at(terminal_index);
+            T const & right = manager->terminal_at(rhs.terminal_index);
+            result = L{}.compare(left, right);
+          } else {
+            return flip(rhs.compare1(*this, cache));
+          }
+        } else {
+          if (rhs.is_terminal() || variable_index < rhs.variable_index) {
+            for (auto iterator = part.begin(); iterator != part.end(); iterator++) {
+              result = result && std::get<1>(*iterator)->compare1(rhs, cache);
+              if (result == Different) {
+                break;
+              }
+            }
+          } else if (variable_index > rhs.variable_index) {
+            return flip(rhs.compare1(*this, cache));
+          } else {
+            auto iterator_lhs = part.begin();
+            auto iterator_rhs = rhs.part.begin();
+            while (result != Different && (
+                     iterator_lhs != part.end() ||
+                     iterator_rhs != rhs.part.end()
+                   ) )
+            {
+              // travers the partitions in parallel and recurse
+              // code copied and modified from merge_partition
+              // the last bound (+∞) should be the same for both partition
+              assert(iterator_lhs != part.end() && iterator_rhs != rhs.part.end() );
+
+              result = result && std::get<1>(*iterator_lhs)->compare1(*std::get<1>(*iterator_rhs), cache);
+
+              const half_interval& next_lhs = std::get<0>(*iterator_lhs);
+              const half_interval& next_rhs = std::get<0>(*iterator_rhs);
+              const half_interval& next = min(next_lhs, next_rhs);
+
+              if (next_lhs <= next) {
+                iterator_lhs++;
+              }
+              if (next_rhs <= next) {
+                iterator_rhs++;
+              }
+            }
+          }
+        }
+        cache.insert(this, &rhs, result);
+        cache.insert(&rhs, this, flip(result));
+        return result;
+      }
+    }
+
  public:
 
     idd(idd_manager<V,T,L>* mngr, int terminal_idx): variable_index(-1), terminal_index(terminal_idx), part(), manager(mngr) {
@@ -304,7 +363,7 @@ namespace mtidd
 
     idd<V, T, L> const & combine(const idd<V, T, L> & rhs, std::function<T (T const &, T const &)> combine_elements) const {
       assert(manager == rhs.manager);
-      operation_cache<V, T, L> cache;
+      operation_cache_idd cache(nullptr);
       return combine1(rhs, combine_elements, cache);
     }
 
@@ -344,14 +403,10 @@ namespace mtidd
       return this != (&rhs);
     }
 
-    lattice_compare compare(idd<V, T, L> const& rhs) const {
+    lattice_compare compare(idd<V, T, L> const & rhs) const {
       assert(manager == rhs.manager);
-      if (*this == rhs) {
-        return Equal;
-      } else {
-        // XXX
-        throw "TODO compare";
-      }
+      operation_cache<lattice_compare> cache(Different);
+      return compare1(rhs, cache);
     }
 
     bool operator<(idd<V, T, L> const& rhs) const {
@@ -750,17 +805,6 @@ namespace mtidd
     {
       return combine_two_hashes( std::get<0>(s)->hash(),  std::get<1>(s)->hash());
     }
-  };
-
-  template< typename V, // variable
-            typename T, // terminal
-            typename L >
-  class operation_cache: public cache<idd<V,T,L> const *, idd<V,T,L> const *, true, idd_hash<V,T,L>> {
-
-  public:
-
-    operation_cache(): cache<idd<V,T,L> const *, idd<V,T,L> const *, true, idd_hash<V,T,L>>(nullptr) { }
-
   };
 
 
