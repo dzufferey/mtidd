@@ -537,8 +537,6 @@ namespace mtidd
       }
     }
 
-    //TODO change the ordering
-
     L const & get_lattice() { return lattice; }
 
     int compare(V const & v1, V const & v2) {
@@ -643,6 +641,44 @@ namespace mtidd
         _bottom = &from_terminal(lattice.bottom());
       }
       return *_bottom;
+    }
+
+    std::map<idd<V, T, L> const &, idd<V, T, L> const &>  reorder(std::map<int, int> const & var_idx_bijection) {
+      int n = number_of_variables();
+      std::map<int, int> inverse_bijection;
+      //checks that we are indeed dealing with a bijection and that the indices are in the [0,#var) range
+      for (int i = 0; i < n; i++) {
+        assert(var_idx_bijection.count(i) == 1);
+        int j = var_idx_bijection.at(i);
+        assert(j >= 0 && j < n);
+        assert(inverse_bijection.count(j) == 0);
+        inverse_bijection[j] = i;
+      }
+      //permute on the ordering
+      variable_ordering.permute(var_idx_bijection);
+      //TODO bubble sort on the idd
+      int idx[n]; // keep track of the permutations
+      for (int i = 0; i < n; i++) {
+        idx[i] = inverse_bijection[i];
+      }
+      int end_index = n-1;
+      while(0 < end_index) {
+        end_index = 0;
+        int new_end_index = 0;
+        for (int i = 1; i < end_index; i++) {
+          if (idx[i-1] > idx[i]) {
+            new_end_index = i;
+            int tmp = idx[i-1];
+            idx[i-1] = idx[i];
+            idx[i] = tmp;
+            //TODO swap i + 1 in the idd
+            //TODO mapping for the old idd to the new or can we do it in-place?
+            throw "TODO swap";
+          }
+        }
+        end_index = new_end_index;
+      }
+      throw "TODO inplace?";
     }
 
   }; // idd

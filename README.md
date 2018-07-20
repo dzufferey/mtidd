@@ -30,4 +30,5 @@ Nothing concrete yet.
    * partial lookup for two steps in the variable order (needed in the swap)
    * reordering is like bubble sort with the new order and using swap
 - implement proper reference counting to manage the memory
+   * `acquire` and `release` method
 - map operation to transform the type of variables and terminal
