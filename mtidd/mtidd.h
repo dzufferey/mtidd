@@ -361,12 +361,16 @@ namespace mtidd
       return variable_index < 0;
     }
 
+    /* Combines two idd, merging the terminal using the given function.
+     * For instance, '&' and '|' just call this method with glb/lub.
+     */
     idd<V, T, L> const & combine(const idd<V, T, L> & rhs, std::function<T (T const &, T const &)> combine_elements) const {
       assert(manager == rhs.manager);
       operation_cache_idd cache(nullptr);
       return combine1(rhs, combine_elements, cache);
     }
 
+    /* 'and' operator: combines two idd using the greatest lower bound */
     idd<V, T, L> const & operator&(const idd<V, T, L> & rhs) const {
       std::function<T (T const &, T const &)> op = [&](T const & l, T const &r) {
         return manager->terminal_glb(l, r);
@@ -374,6 +378,7 @@ namespace mtidd
       return combine(rhs, op);
     }
 
+    /* 'or' operator: combines two idd using the least upper bound */
     idd<V, T, L> const & operator|(const idd<V, T, L> & rhs) const {
       std::function<T (T const &, T const &)> op = [&](T const & l, T const &r) {
         return manager->terminal_lub(l, r);
@@ -381,7 +386,9 @@ namespace mtidd
       return combine(rhs, op);
     }
 
-    // only one step local, assume decendant are internalized in the manager
+    /* Test the structural equality between two idds.
+     * This assumes that the children are alreadt internalized, therefore, the check is one for the first/top-level node.
+     */
     bool equals_structural(idd<V, T, L> const& rhs) const {
       // only compare IDD from the same manager!
       assert(manager == rhs.manager);
@@ -392,7 +399,9 @@ namespace mtidd
              );
     }
 
-    // assume the IDDs are internalized so equal means are the object
+    /* Testing equality.
+     * Assume the IDDs are internalized so equality means their are the same objects.
+     */
     bool operator==(idd<V, T, L> const& rhs) const {
       assert(manager == rhs.manager);
       return this == (&rhs);
@@ -403,6 +412,7 @@ namespace mtidd
       return this != (&rhs);
     }
 
+    /* Compare (partial-order) two idds. */
     lattice_compare compare(idd<V, T, L> const & rhs) const {
       assert(manager == rhs.manager);
       operation_cache<lattice_compare> cache(Different);
@@ -419,6 +429,7 @@ namespace mtidd
       return c == Smaller || c == Equal;
     }
 
+    /* Given a value for each variable returns the corresponding terminal. */
     const T& lookup(std::map<V,double> const& point) const {
       if (is_terminal()) {
         T const & ref = manager->terminal_at(terminal_index);
@@ -435,6 +446,9 @@ namespace mtidd
       return hash_value;
     }
 
+    /* Traverse recursively the idds nodes.
+     * This method does not take sharing into account and can visit nodes multiple times.
+     */
     void traverse_all(std::function<void (const idd<V, T, L> *)> apply_on_element) const {
       apply_on_element(this);
       if ( !is_terminal() ) {
@@ -444,7 +458,9 @@ namespace mtidd
       }
     }
 
-    // take sharing into account and visit nodes just once
+    /* Traverse recursively the idds nodes.
+     * This method takes sharing into account and visit each node only once.
+     */
     void traverse(std::function<void (const idd<V, T, L> *)> apply_on_element) const {
       idd_set cache;
       traverse1(apply_on_element, cache);
@@ -466,6 +482,7 @@ namespace mtidd
       partial_overlaps1(lhs_overlaps, rhs_overlaps, box, cache);
     }
 
+    /* Returns the number of nodes in the idd. */
     int idd_size() {
       idd_set cache;
       return idd_size1(cache);
@@ -490,7 +507,7 @@ namespace mtidd
       return out;
     }
 
-  };
+  }; // idd
 
   template< typename V, typename T, typename L >
   struct idd_hash {
@@ -598,12 +615,13 @@ namespace mtidd
       }
     }
 
+    /* Constructs an IDD from a default value. */
     idd<V, T, L> const & from_terminal(T const & value) {
       int idx = internalize_terminal(value);
       return internalize(new idd<V,T,L>(this, idx));
     }
 
-    // constructs an IDD from a box (map v -> interval), a value, and a default value
+    /* Constructs an IDD from a box (map v -> interval), a value, and a default value. */
     idd<V, T, L> const & from_box(std::map<V,interval> const& box, T const & inside_value, T const & outside_value) {
       int in_idx = internalize_terminal(inside_value);
       idd<V, T, L> const & in_part = internalize(new idd<V,T,L>(this, in_idx));
@@ -643,7 +661,8 @@ namespace mtidd
       return *_bottom;
     }
 
-    std::map<idd<V, T, L> const &, idd<V, T, L> const &>  reorder(std::map<int, int> const & var_idx_bijection) {
+    //TODO when done copy in the bool specialization
+    std::map<idd<V, T, L> const &, idd<V, T, L> const &> reorder(std::map<int, int> const & var_idx_bijection) {
       int n = number_of_variables();
       std::map<int, int> inverse_bijection;
       //checks that we are indeed dealing with a bijection and that the indices are in the [0,#var) range
@@ -681,8 +700,13 @@ namespace mtidd
       throw "TODO inplace?";
     }
 
-  }; // idd
+    size_t size() const {
+      return cache.size();
+    }
 
+  }; // idd_manager
+
+  /* bool specialization of the idd_manager */
   template< typename V > // variable
   class idd_manager<V, bool, lattice<bool>>
   {
@@ -829,6 +853,10 @@ namespace mtidd
         _bottom = &internalize(new idd<V,bool,lattice<bool>>(this, false_index));
       }
       return *_bottom;
+    }
+
+    size_t size() const {
+      return cache.size();
     }
 
   };
