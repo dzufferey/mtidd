@@ -4,9 +4,8 @@ load("//tools:mtidd.bzl", "mtidd_test")
 cc_library(
   name = "catch",
   hdrs = ["@catch2//file"],
-  srcs = ["catch.cpp"],
-  visibility = ["//visibility:public"],
-  strip_include_prefix = "/external/catch2/file",
+  visibility = ["//test:__pkg__"],
+  strip_include_prefix = "/file",
   include_prefix = "catch2",
   linkstatic = True,
 )

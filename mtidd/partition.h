@@ -6,6 +6,7 @@
 #include <iterator>
 #include <list>
 #include <tuple>
+#include <memory>
 
 #include "interval.h"
 #include "utils.h"
@@ -17,10 +18,10 @@ namespace mtidd
 
   // a partition is just an alias for a list of boundaries
   template<class A>
-  using partition = std::list<std::tuple<half_interval, const A *>>;
+  using partition = std::list<std::tuple<half_interval, std::shared_ptr<const A>>>;
 
   template<class A>
-  partition<A> new_partition(const A * default_value) {
+  partition<A> new_partition(std::shared_ptr<const A> default_value) {
     partition<A> boundaries;
     boundaries.emplace_back(upper_sentinel, default_value);
     return boundaries;
@@ -28,7 +29,7 @@ namespace mtidd
 
   // insert an interval into a partition
   template<class A>
-  void insert_partition(partition<A>& boundaries, interval const& i, const A * value) {
+  void insert_partition(partition<A>& boundaries, interval const& i, std::shared_ptr<const A> value) {
     //cerr << "inserting " << i << " in " << boundaries << endl;
     assert(!is_empty(i));
     half_interval new_start = std::make_tuple(std::get<0>(i), std::get<1>(i));
@@ -64,15 +65,15 @@ namespace mtidd
   }
 
   template<class A>
-  void map_partition(partition<A>& result, partition<A> const& arg, std::function<const A* (const A *)> map_elements) {
-    const A * previous_value = nullptr;
+  void map_partition(partition<A>& result, partition<A> const& arg, std::function<std::shared_ptr<const A> (std::shared_ptr<const A>)> map_elements) {
+    std::shared_ptr<const A> previous_value = nullptr;
     result.clear();
     auto iterator = arg.begin();
     while (iterator != arg.end()){
 
       const half_interval& next = std::get<0>(*iterator);
-      const A * next_value = map_elements(std::get<1>(*iterator));
-      assert(next_value != nullptr);
+      std::shared_ptr<const A> next_value = map_elements(std::get<1>(*iterator));
+      assert(next_value.get() != nullptr);
 
       // merge previous and next if they point to the same value
       if (next_value == previous_value) {
@@ -86,13 +87,13 @@ namespace mtidd
   }
 
   template<class A>
-  void filter_partition(std::list<interval>& result, partition<A> const& arg, std::function<bool (const A *)> filter_elements) {
+  void filter_partition(std::list<interval>& result, partition<A> const& arg, std::function<bool (const A&)> filter_elements) {
     result.clear();
     auto iterator = arg.begin();
     half_interval lhs = lower_sentinel;
     half_interval rhs = std::get<0>(*iterator);
     while (iterator != arg.end()) {
-      if (filter_elements(std::get<1>(*iterator))) {
+      if (filter_elements(*std::get<1>(*iterator))) {
           interval intv = std::make_tuple(std::get<0>(lhs), std::get<1>(lhs), std::get<0>(rhs), std::get<1>(rhs));
           result.push_back(intv);
       }
@@ -105,10 +106,10 @@ namespace mtidd
   // when calling the method, the accumulator contains the initial value.
   // when returning, the accumulator contains the result
   template<class A, class B>
-  void foldl_partition(B& accumulator, partition<A> const& arg, std::function<B (const B, const A*)> combine) {
+  void foldl_partition(B& accumulator, partition<A> const& arg, std::function<B (const B, const A&)> combine) {
     auto iterator = arg.begin();
     while (iterator != arg.end()) {
-      accumulator = combine(accumulator, std::get<1>(*iterator));
+      accumulator = combine(accumulator, *std::get<1>(*iterator));
       iterator++;
     }
   }
@@ -116,9 +117,9 @@ namespace mtidd
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, std::function<const A* (const A *, const A *)> merge_elements) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, std::function<std::shared_ptr<const A> (std::shared_ptr<const A>, std::shared_ptr<const A>)> merge_elements) {
 
-    const A * previous_value = nullptr;
+    std::shared_ptr<const A> previous_value = nullptr;
     result.clear();
 
     auto iterator_lhs = lhs.begin();
@@ -134,7 +135,7 @@ namespace mtidd
       const half_interval& next_rhs = std::get<0>(*iterator_rhs);
 
       const half_interval& next = min(next_lhs, next_rhs);
-      const A * next_value = merge_elements(std::get<1>(*iterator_lhs), std::get<1>(*iterator_rhs));
+      std::shared_ptr<const A> next_value = merge_elements(std::get<1>(*iterator_lhs), std::get<1>(*iterator_rhs));
       assert(next_value != nullptr);
 
       // merge previous and next if they point to the same value
@@ -155,9 +156,9 @@ namespace mtidd
   }
 
   template<class A>
-  const A * lookup_partition(partition<A> const & boundaries, double value) {
+  std::shared_ptr<const A> lookup_partition(partition<A> const & boundaries, double value) {
     auto iterator = boundaries.begin();
-    const A * result = std::get<1>(*iterator);
+    std::shared_ptr<const A> result = std::get<1>(*iterator);
     while (!contains(std::get<0>(*iterator), value)) {
       iterator++;
       assert(iterator != boundaries.end());
@@ -167,7 +168,7 @@ namespace mtidd
   }
 
   template<class A>
-  size_t hash_partition(partition<A>& boundaries, std::function<size_t (const A *)> hash_element) {
+  size_t hash_partition(partition<A>& boundaries, std::function<size_t (const A &)> hash_element) {
     //inspired by https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
 
     size_t h1 = 0x3141592653589793; // seed
@@ -191,7 +192,7 @@ namespace mtidd
       h1 = rotl64(h1,27);
       h1 = h1*5+0x52dce729;
 
-      h1 ^= hash_element(std::get<1>(*iterator));
+      h1 ^= hash_element(*std::get<1>(*iterator));
     }
 
     h1 ^= boundaries.size();
@@ -208,7 +209,7 @@ namespace mtidd
   template<class A>
   std::ostream & print_partition(std::ostream & out, const partition<A>& boundaries, std::function<std::ostream & (std::ostream &, const A *)> print_element) {
     for(auto iterator = boundaries.begin(); iterator != boundaries.end(); iterator++) {
-      print_element(out, std::get<1>(*iterator)) << " until " << std::get<0>(*iterator) << ", ";
+      print_element(out, *std::get<1>(*iterator)) << " until " << std::get<0>(*iterator) << ", ";
     }
     return out;
   }

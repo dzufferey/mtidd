@@ -26,7 +26,7 @@ namespace mtidd
       return by_value.at(v);
     }
 
-    T const & at(int i) const {
+    T at(int i) const {
       return by_index.at(i);
     }
 

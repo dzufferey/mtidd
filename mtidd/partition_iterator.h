@@ -6,11 +6,11 @@ namespace mtidd
 {
 
   template<class A>
-  class partition_iterator: public std::iterator<std::forward_iterator_tag, const A*> {
+  class partition_iterator: public std::iterator<std::forward_iterator_tag, std::shared_ptr<const A>> {
 
     private:
     typedef typename partition<A>::const_iterator boundaries_iterator;
-    typedef std::function<bool (half_interval const & lower_bound, half_interval const & upper_bound, const A *)> filter_fun;
+    typedef std::function<bool (half_interval const & lower_bound, half_interval const & upper_bound, const A &)> filter_fun;
 
     filter_fun filter;
     half_interval lb;
@@ -28,13 +28,13 @@ namespace mtidd
 
     void until_filter(){
       // find the first element that pass filter
-      while(itr != last && !filter(lb, std::get<0>(*itr), std::get<1>(*itr))) {
+      while(itr != last && !filter(lb, std::get<0>(*itr), *std::get<1>(*itr))) {
         itr_next();
       }
     }
 
     filter_fun trivial() const {
-      return [](half_interval const &, half_interval const &, const A*) {
+      return [](half_interval const &, half_interval const &, const A&) {
         return true;
       };
     }
@@ -88,7 +88,7 @@ namespace mtidd
       return !(*this == other);
     }
 
-    const A* operator*() const {
+    std::shared_ptr<const A> operator*() const {
       return std::get<1>(*itr);
     }
 
@@ -103,7 +103,7 @@ namespace mtidd
     // return the values that cover intv
     static partition_iterator<A> covers(partition<A> const & boundaries,  const interval& intv) {
       assert(!is_empty(intv));
-      filter_fun  f = [&](half_interval const & a, half_interval const & b, const A*) {
+      filter_fun  f = [&](half_interval const & a, half_interval const & b, const A&) {
         interval i = make_interval(a, b); 
         return overlap(i, intv);
       };
@@ -113,7 +113,7 @@ namespace mtidd
     // return the values fully covered by intv
     static partition_iterator<A> covered_by(partition<A> const & boundaries,  const interval& intv) {
       assert(!is_empty(intv));
-      filter_fun  f = [&](half_interval const & a, half_interval const & b, const A*) {
+      filter_fun  f = [&](half_interval const & a, half_interval const & b, const A&) {
         interval i = make_interval(a, b); 
         return mtidd::covers(intv, i);
       };
