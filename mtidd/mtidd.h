@@ -17,7 +17,15 @@
 #include "cache.h"
 
 //TODO idd as nested class in manager to reduce the number of type arguments
-//TODO use smart pointer for the memory management
+
+//TODO alpha when the internalized orders change
+
+//TODO operations as friend so we don't refer to this without the shared_ptr
+
+// TODO bool, int specialization of the idd_manager, no need to internalize values
+//  int true_index = 1;
+//  int false_index = 0;
+
 
 namespace mtidd
 {
@@ -131,13 +139,14 @@ namespace mtidd
                           operation_cache_idd & cache) {
       auto cached = cache.lookup(lhs, rhs);
       auto mngr = lhs->manager;
-      if (cached != nullptr) {
+      if (cached) {
         return cached;
       } else if (lhs->is_terminal()) {
         if (rhs->is_terminal()) {
           T const & left = mngr->terminal_at(lhs->terminal_index);
           T const & right = mngr->terminal_at(rhs->terminal_index);
-          int new_terminal = mngr->internalize_terminal( combine_elements(left, right) );
+          T comb = combine_elements(left, right);
+          int new_terminal = mngr->internalize_terminal( comb );
           idd_t result = std::make_shared<const idd<V,T,L>>(mngr, new_terminal);
           idd_t internalized = mngr->internalize(result);
           cache.insert(lhs, rhs, internalized);
@@ -374,10 +383,6 @@ namespace mtidd
       computeHash();
     }
 
-    //TODO alpha when the internalized orders change
-
-    //TODO operations as friend so we don't refer to this without the shared_ptr
-
     // make sure the copy constructor is not called implicitly
     explicit idd(const idd<V, T, L>& that) {
       throw "The copy constructor of IDD should not be used!";
@@ -399,7 +404,7 @@ namespace mtidd
     /* 'and' operator: combines two idd using the greatest lower bound */
     friend idd_t operator&(idd_t lhs, idd_t rhs) {
       std::function<T (T const &, T const &)> op = [&](T const & l, T const &r) {
-        return lhs->manager->terminal_glb(l, r);
+        return L().greatest_lower_bound(l, r);
       };
       return combine(lhs, rhs, op);
     }
@@ -407,7 +412,7 @@ namespace mtidd
     /* 'or' operator: combines two idd using the least upper bound */
     friend idd_t operator|(idd_t lhs, idd_t rhs) {
       std::function<T (T const &, T const &)> op = [&](T const & l, T const &r) {
-        return lhs->manager->terminal_lub(l, r);
+        return L().least_upper_bound(l, r);
       };
       return combine(lhs, rhs, op);
     }
@@ -439,7 +444,7 @@ namespace mtidd
 
     friend bool operator==(idd_t lhs, idd_t rhs) {
       assert(lhs->manager == rhs->manager);
-      return rhs.get() == rhs.get();
+      return lhs.get() == rhs.get();
     }
 
     bool operator!=(idd<V, T, L> const& rhs) const {
@@ -489,7 +494,6 @@ namespace mtidd
     /* Traverse recursively the idds nodes.
      * This method does not take sharing into account and can visit nodes multiple times.
      */
-    //TODO shared_ptr ?
     friend void traverse_all(idd_t lhs, std::function<void (idd_t)> apply_on_element) {
       apply_on_element(lhs);
       if ( !lhs->is_terminal() ) {
@@ -602,8 +606,6 @@ namespace mtidd
     typedef std::shared_ptr<const idd<V,T,L>> idd_t;
 
   private:
-    L lattice;// = L();
-
     typedef std::unordered_set<std::weak_ptr<const idd<V,T,L>>, //probably a bad idea!
                   idd_hash_w<V,T,L>,
                   idd_equalTo_w<V,T,L>> cache_t;
@@ -612,13 +614,11 @@ namespace mtidd
     internalizer<T, lattice_hash<T,L>, lattice_equalTo<T,L>> terminals_store;
 
     //caching top and bottom as they are often called
-    idd_t _top = std::shared_ptr<const idd<V,T,L>>();
-    idd_t _bottom = std::shared_ptr<const idd<V,T,L>>();
+    idd_t _top = std::shared_ptr<const idd<V,T,L>>(nullptr);
+    idd_t _bottom = std::shared_ptr<const idd<V,T,L>>(nullptr);
 
 
   public:
-
-    L const & get_lattice() { return lattice; }
 
     int compare(V const & v1, V const & v2) {
       return variable_ordering.compare(v1, v2);
@@ -661,11 +661,11 @@ namespace mtidd
     }
 
     T terminal_lub(T const & l, T const & r) {
-      return lattice.least_upper_bound(l, r);
+      return L().least_upper_bound(l, r);
     }
 
     T terminal_glb(T const & l, T const & r) {
-      return lattice.greatest_lower_bound(l, r);
+      return L().greatest_lower_bound(l, r);
     }
 
     /* Constructs an IDD from a default value. */
@@ -702,14 +702,14 @@ namespace mtidd
 
     idd_t top() {
       if (_top.get() == nullptr) {
-        _top = from_terminal(lattice.top());
+        _top = from_terminal(L().top());
       }
       return _top;
     }
 
     idd_t bottom() {
       if (_bottom.get() == nullptr) {
-        _bottom = from_terminal(lattice.bottom());
+        _bottom = from_terminal(L().bottom());
       }
       return _bottom;
     }
@@ -758,10 +758,6 @@ namespace mtidd
     }
 
   }; // idd_manager
-
-// TODO bool, int specialization of the idd_manager, no need to internalize values
-//  int true_index = 1;
-//  int false_index = 0;
 
   template< typename V, // variable
             typename T, // terminal

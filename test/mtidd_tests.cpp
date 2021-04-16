@@ -70,7 +70,7 @@ namespace mtidd {
     REQUIRE(dd->equals_structural(*dd_copy));
     REQUIRE(dd->hash() == dd_copy->hash());
   }
-  
+
   TEST_CASE("simple compare") {
     idd_manager<int, bool> mngr;
     mngr.internalize_variable(0);
@@ -135,6 +135,60 @@ namespace mtidd {
     REQUIRE(contained.count(-1) > 0);
     REQUIRE(contained.count(999) > 0);
 
+  }
+
+  TEST_CASE("operation (trivial)") {
+    idd_manager<int, bool> mngr;
+    auto dd1 = mngr.from_terminal(true);
+    auto dd2 = mngr.from_terminal(false);
+    shared_ptr<idd<int, bool> const> dd_inter = dd1 & dd2;
+    REQUIRE(dd2 == dd_inter);
+    shared_ptr<idd<int, bool> const> dd_union = dd1 | dd2;
+    REQUIRE(dd1 == dd_union);
+  }
+
+  TEST_CASE("operation (less trivial)") {
+    idd_manager<int, bool> mngr;
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    auto dd1 = mngr.from_box(box, true, false);
+    auto dd2 = mngr.from_terminal(false);
+    shared_ptr<idd<int, bool> const> dd_inter = dd1 & dd2;
+    REQUIRE(dd2 == dd_inter);
+    shared_ptr<idd<int, bool> const> dd_union = dd1 | dd2;
+    REQUIRE(dd1 == dd_union);
+  }
+
+  TEST_CASE("operation (simple)") {
+    idd_manager<int, bool> mngr;
+    mngr.internalize_variable(0);
+    map<int, interval> box;
+    box[0] = make_tuple(-10, Closed, 10, Closed);
+    auto dd1 = mngr.from_box(box, true, false);
+    box[0] = make_tuple(0, Closed, 20, Closed);
+    auto dd2 = mngr.from_box(box, true, false);
+    shared_ptr<idd<int, bool> const> dd_inter = dd1 & dd2;
+    REQUIRE(dd1 >= dd_inter);
+    REQUIRE(dd2 >= dd_inter);
+    shared_ptr<idd<int, bool> const> dd_union = dd1 | dd2;
+    REQUIRE(dd1 <= dd_union);
+    REQUIRE(dd2 <= dd_union);
+    map<int, double> point;
+    point[0] = -100;
+    REQUIRE(!dd_inter->lookup(point));
+    REQUIRE(!dd_union->lookup(point));
+    point[0] = -1;
+    REQUIRE(!dd_inter->lookup(point));
+    REQUIRE( dd_union->lookup(point));
+    point[0] = 1;
+    REQUIRE( dd_inter->lookup(point));
+    REQUIRE( dd_union->lookup(point));
+    point[0] = 11;
+    REQUIRE(!dd_inter->lookup(point));
+    REQUIRE( dd_union->lookup(point));
+    point[0] = 21;
+    REQUIRE(!dd_inter->lookup(point));
+    REQUIRE(!dd_union->lookup(point));
   }
 
   TEST_CASE("operation idempotence (simple)") {
@@ -238,68 +292,6 @@ namespace mtidd {
     REQUIRE(mngr.bottom() == dd2);
   }
 
-  bool next_bool(uniform_int_distribution<int> & dist, default_random_engine & gen) {
-    int n = dist(gen);
-    return n == 0;
-  }
-
-  interval_boundary next_ib(uniform_int_distribution<int> & dist, default_random_engine & gen) {
-    return next_bool(dist, gen) ? Open : Closed;
-  }
-
-  void fill_box(int dims,
-                map<int, interval> & box,
-                uniform_real_distribution<double> & rdist,
-                uniform_int_distribution<int> & idist,
-                default_random_engine & gen) {
-    for (int i = 0; i < dims; i++) {
-      double lb = rdist(gen);
-      if (next_bool(idist, gen)) {
-        lb *= -1;
-      }
-      double ub = lb + rdist(gen);
-      box[i] = make_tuple(lb, next_ib(idist, gen), ub, next_ib(idist, gen));
-    }
-  }
-
-  TEST_CASE("pseudo random operations") {
-    const int dims = 100;
-    const int ops = 10000;
-
-    default_random_engine gen(3141526535);
-    uniform_real_distribution<double> rdist(0.0,1000.0);
-    uniform_int_distribution<int> idist(0,1); //boolean
-
-    idd_manager<int, bool> mngr;
-
-    for (int i = 0; i < dims; i++) {
-      int idx = mngr.internalize_variable(0);
-      REQUIRE(idx >= 0);
-      REQUIRE(idx < dims);
-    }
-
-    using namespace std::chrono;
-    steady_clock::time_point t1 = steady_clock::now();
-
-    map<int, interval> box;
-    fill_box(dims, box, rdist, idist, gen);
-    shared_ptr<idd<int, bool> const> dd = mngr.from_box(box, true, false);
-
-    for (int i = 0; i < ops; i++) {
-      fill_box(dims, box, rdist, idist, gen);
-      shared_ptr<idd<int, bool> const> tmp = mngr.from_box(box, true, false);
-      if (next_bool(idist, gen)) {
-        dd = dd & tmp;
-      } else {
-        dd = dd | tmp;
-      }
-    }
-
-    steady_clock::time_point t2 = steady_clock::now();
-    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
-    cout << "random test with " << dims << " dimensions and " << ops << " operations took " << time_span.count() << " seconds." << endl;
-  }
-
   TEST_CASE("partial_covers") {
     cout << "partial covers:" << endl;
 
@@ -360,6 +352,68 @@ namespace mtidd {
       cout << intv << endl;
     }
 
+  }
+
+  bool next_bool(uniform_int_distribution<int> & dist, default_random_engine & gen) {
+    int n = dist(gen);
+    return n == 0;
+  }
+
+  interval_boundary next_ib(uniform_int_distribution<int> & dist, default_random_engine & gen) {
+    return next_bool(dist, gen) ? Open : Closed;
+  }
+
+  void fill_box(int dims,
+                map<int, interval> & box,
+                uniform_real_distribution<double> & rdist,
+                uniform_int_distribution<int> & idist,
+                default_random_engine & gen) {
+    for (int i = 0; i < dims; i++) {
+      double lb = rdist(gen);
+      if (next_bool(idist, gen)) {
+        lb *= -1;
+      }
+      double ub = lb + rdist(gen);
+      box[i] = make_tuple(lb, next_ib(idist, gen), ub, next_ib(idist, gen));
+    }
+  }
+
+  TEST_CASE("pseudo random operations") {
+    const int dims = 100;
+    const int ops = 10000;
+
+    default_random_engine gen(3141526535);
+    uniform_real_distribution<double> rdist(0.0,1000.0);
+    uniform_int_distribution<int> idist(0,1); //boolean
+
+    idd_manager<int, bool> mngr;
+
+    for (int i = 0; i < dims; i++) {
+      int idx = mngr.internalize_variable(0);
+      REQUIRE(idx >= 0);
+      REQUIRE(idx < dims);
+    }
+
+    using namespace std::chrono;
+    steady_clock::time_point t1 = steady_clock::now();
+
+    map<int, interval> box;
+    fill_box(dims, box, rdist, idist, gen);
+    shared_ptr<idd<int, bool> const> dd = mngr.from_box(box, true, false);
+
+    for (int i = 0; i < ops; i++) {
+      fill_box(dims, box, rdist, idist, gen);
+      shared_ptr<idd<int, bool> const> tmp = mngr.from_box(box, true, false);
+      if (next_bool(idist, gen)) {
+        dd = dd & tmp;
+      } else {
+        dd = dd | tmp;
+      }
+    }
+
+    steady_clock::time_point t2 = steady_clock::now();
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << "random test with " << dims << " dimensions and " << ops << " operations took " << time_span.count() << " seconds." << endl;
   }
 
 }

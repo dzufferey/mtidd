@@ -76,7 +76,7 @@ namespace mtidd
       assert(next_value.get() != nullptr);
 
       // merge previous and next if they point to the same value
-      if (next_value == previous_value) {
+      if (previous_value && next_value == previous_value) {
         result.pop_back();
       }
       previous_value = next_value;
@@ -117,7 +117,8 @@ namespace mtidd
   //a method to merge to partition and combine the values
   //the result is stored into `result`
   template<class A>
-  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs, std::function<std::shared_ptr<const A> (std::shared_ptr<const A>, std::shared_ptr<const A>)> merge_elements) {
+  void merge_partition(partition<A>& result, partition<A> const& lhs, partition<A> const& rhs,
+                       std::function<std::shared_ptr<const A> (std::shared_ptr<const A>, std::shared_ptr<const A>)> merge_elements) {
 
     std::shared_ptr<const A> previous_value = nullptr;
     result.clear();
@@ -136,10 +137,10 @@ namespace mtidd
 
       const half_interval& next = min(next_lhs, next_rhs);
       std::shared_ptr<const A> next_value = merge_elements(std::get<1>(*iterator_lhs), std::get<1>(*iterator_rhs));
-      assert(next_value != nullptr);
+      assert(next_value); // check for valid pointer
 
       // merge previous and next if they point to the same value
-      if (next_value == previous_value) {
+      if (previous_value && next_value == previous_value) {
         result.pop_back();
       }
       previous_value = next_value;
