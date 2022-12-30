@@ -14,7 +14,7 @@ def mtidd_test(
         srcs = srcs,
         deps = [
             "//mtidd:mtidd",
-            "//test:catch"
+            "@catch2//:catch2_main"
         ],
         **kwargs
     )

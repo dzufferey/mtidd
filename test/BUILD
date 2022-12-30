@@ -1,16 +1,5 @@
 load("//tools:mtidd.bzl", "mtidd_test")
 
-# to simplify the import, see https://stackoverflow.com/questions/53306147/include-file-downloaded-by-bazel-http-file
-cc_library(
-  name = "catch",
-  hdrs = ["@catch2//file"],
-  srcs = ["catch.cpp"],
-  visibility = ["//visibility:public"],
-  strip_include_prefix = "/external/catch2/file",
-  include_prefix = "catch2",
-  linkstatic = True,
-)
-
 mtidd_test(
     name = "internalizer_tests",
 )
