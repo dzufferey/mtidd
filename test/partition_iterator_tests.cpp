@@ -1,15 +1,15 @@
-#include "mtidd/mtidd.h"
+#include "mtidd/mtidd.hpp"
 
 #include <iostream>
 
 #define CATCH_CONFIG_MAIN
-#include "catch2/catch.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 using namespace std;
 
 namespace mtidd {
 
-  TEST_CASE("000") {
+TEST_CASE("000") {
     auto a = make_shared<const int>(0);
     auto b = make_shared<const int>(1);
     auto c = make_shared<const int>(2);
@@ -69,10 +69,10 @@ namespace mtidd {
     REQUIRE(itr != end);
     REQUIRE(**itr == *b);
     ++itr;
-    REQUIRE(itr == end); 
-  }
+    REQUIRE(itr == end);
+}
 
-  TEST_CASE("covers") {
+TEST_CASE("covers") {
     auto a = make_shared<const int>(0);
     auto b = make_shared<const int>(1);
     auto c = make_shared<const int>(2);
@@ -80,7 +80,7 @@ namespace mtidd {
     auto e = make_shared<const int>(4);
     auto f = make_shared<const int>(5);
     partition<int> p = new_partition(a);
-  
+
     interval it = make_tuple(-10, Open, 10, Closed);
     it = make_tuple(-20, Open, 20, Closed);
     insert_partition(p, it, f);
@@ -92,7 +92,9 @@ namespace mtidd {
     insert_partition(p, it, e);
 
     interval test = make_tuple(-10, Closed, 10, Closed);
-    // interval test = make_tuple<double, interval_boundary, double, interval_boundary>(-numeric_limits<double>::infinity(), Open, numeric_limits<double>::infinity(), Open);
+    // interval test = make_tuple<double, interval_boundary, double,
+    // interval_boundary>(-numeric_limits<double>::infinity(), Open,
+    // numeric_limits<double>::infinity(), Open);
 
     // covers
     auto itr = partition_iterator<int>::covers(p, test);
@@ -122,6 +124,6 @@ namespace mtidd {
     REQUIRE(**itr == *e);
     ++itr;
     REQUIRE(itr == end);
-  }
-
 }
+
+} // namespace mtidd
