@@ -167,6 +167,13 @@ TEST_CASE("operation (simple)") {
     box[0] = make_tuple(0, Closed, 20, Closed);
     auto dd2 = mngr.from_box(box, true, false);
     shared_ptr<idd<int, bool> const> dd_inter = dd1 & dd2;
+    //cout << "dd1" << endl;
+    //dd1->print(cout);
+    //cout << endl << "dd2" << endl;
+    //dd2->print(cout);
+    //cout << endl << "dd_inter" << endl;
+    //dd_inter->print(cout);
+    //cout << endl;
     REQUIRE(dd1 >= dd_inter);
     REQUIRE(dd2 >= dd_inter);
     shared_ptr<idd<int, bool> const> dd_union = dd1 | dd2;
@@ -292,7 +299,7 @@ TEST_CASE("traverse combine caching") {
 }
 
 TEST_CASE("partial_covers") {
-    cout << "partial covers:" << endl;
+    //cout << "partial covers:" << endl;
 
     idd_manager<int, bool> mngr;
     REQUIRE(mngr.top() != mngr.bottom());
@@ -315,20 +322,19 @@ TEST_CASE("partial_covers") {
     map<int, interval> rhs_overlaps1;
     partial_overlaps(dd1, lhs_overlaps1, rhs_overlaps1, box1);
 
-    cout << "LHS:" << endl;
-    for (auto iterator = lhs_overlaps1.begin(); iterator != lhs_overlaps1.end(); iterator++) {
-        interval intv = iterator->second;
-        cout << intv << endl;
-    }
+    //cout << "LHS:" << endl;
+    //for (auto iterator = lhs_overlaps1.begin(); iterator != lhs_overlaps1.end(); iterator++) {
+    //    interval intv = iterator->second;
+    //    cout << intv << endl;
+    //}
 
-    cout << "RHS:" << endl;
-    for (auto iterator = rhs_overlaps1.begin(); iterator != rhs_overlaps1.end(); iterator++) {
-        interval intv = iterator->second;
-        cout << intv << endl;
-    }
+    //cout << "RHS:" << endl;
+    //for (auto iterator = rhs_overlaps1.begin(); iterator != rhs_overlaps1.end(); iterator++) {
+    //    interval intv = iterator->second;
+    //    cout << intv << endl;
+    //}
 
-    std::cout << "-----" << std::endl;
-    //
+    //std::cout << "-----" << std::endl;
 
     map<int, interval> box2;
     box2[0] = make_tuple(-50, Closed, 10, Closed);
@@ -339,17 +345,17 @@ TEST_CASE("partial_covers") {
     map<int, interval> rhs_overlaps2;
     partial_overlaps(dd1, lhs_overlaps2, rhs_overlaps2, box2);
 
-    cout << "LHS 1:" << endl;
-    for (auto iterator = lhs_overlaps2.begin(); iterator != lhs_overlaps2.end(); iterator++) {
-        interval intv = iterator->second;
-        cout << intv << endl;
-    }
+    //cout << "LHS 1:" << endl;
+    //for (auto iterator = lhs_overlaps2.begin(); iterator != lhs_overlaps2.end(); iterator++) {
+    //    interval intv = iterator->second;
+    //    cout << intv << endl;
+    //}
 
-    cout << "RHS 2:" << endl;
-    for (auto iterator = rhs_overlaps2.begin(); iterator != rhs_overlaps2.end(); iterator++) {
-        interval intv = iterator->second;
-        cout << intv << endl;
-    }
+    //cout << "RHS 2:" << endl;
+    //for (auto iterator = rhs_overlaps2.begin(); iterator != rhs_overlaps2.end(); iterator++) {
+    //    interval intv = iterator->second;
+    //    cout << intv << endl;
+    //}
 }
 
 bool next_bool(uniform_int_distribution<int> &dist, default_random_engine &gen) {

@@ -454,6 +454,16 @@ class idd {
         return c == Smaller || c == Equal;
     }
 
+    friend bool operator>(idd_t lhs, idd_t rhs) {
+        lattice_compare c = compare(lhs, rhs);
+        return c == Greater;
+    }
+
+    friend bool operator>=(idd_t lhs, idd_t rhs) {
+        lattice_compare c = compare(lhs, rhs);
+        return c == Greater || c == Equal;
+    }
+
     /* Given a value for each variable returns the corresponding terminal. */
     const T &lookup(std::map<V, double> const &point) const {
         if (is_terminal()) {
