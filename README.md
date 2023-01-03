@@ -12,6 +12,13 @@ bazelisk build //...
 bazelisk test //...
 ```
 
+#### clangd
+
+To generate a `compile_commands.json` for clangd:
+```sh
+bazelisk run @hedron_compile_commands//:refresh_all
+```
+
 ## Status
 
 Started to work on it.
