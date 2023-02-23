@@ -23,18 +23,25 @@ bool ends_before(const half_interval &lhs, const half_interval &rhs) {
     return left < right || (left == right && get<1>(lhs) == Open);
 }
 
-// lhs and rhs are the right/end of an interval
-bool operator<=(const half_interval &lhs, const half_interval &rhs) {
+std::partial_ordering operator<=>(const half_interval &lhs, const half_interval &rhs) {
     double left = get<0>(lhs);
     double right = get<0>(rhs);
-    return left < right || (left == right && (get<1>(lhs) == Open || get<1>(rhs) == Closed));
-}
-
-// lhs and rhs are the right/end of an interval
-bool operator<(const half_interval &lhs, const half_interval &rhs) {
-    double left = get<0>(lhs);
-    double right = get<0>(rhs);
-    return left < right || (left == right && get<1>(lhs) == Open && get<1>(rhs) == Closed);
+    if (left < right) {
+        return std::partial_ordering::less;
+    } else if (left > right) {
+        return std::partial_ordering::greater;
+    } else {
+        // left == right
+        interval_boundary lb = get<1>(lhs);
+        interval_boundary rb = get<1>(rhs);
+        if (lb == rb) {
+            return std::partial_ordering::equivalent;
+        } else if (lb == Open) {
+            return std::partial_ordering::less;
+        } else {
+            return std::partial_ordering::greater;
+        }
+    }
 }
 
 bool contains(const half_interval &end, double value) {

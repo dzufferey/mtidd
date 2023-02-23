@@ -78,16 +78,16 @@ TEST_CASE("simple compare") {
     box[0] = make_tuple(-10, Closed, 10, Closed);
     shared_ptr<idd<int, bool> const> dd1 = mngr.from_box(box, true, false);
     shared_ptr<idd<int, bool> const> dd2 = mngr.from_box(box, false, true);
-    REQUIRE(compare(mngr.bottom(), dd1) == Smaller);
-    REQUIRE(compare(mngr.bottom(), dd2) == Smaller);
-    REQUIRE(compare(dd1, mngr.bottom()) == Greater);
-    REQUIRE(compare(dd2, mngr.bottom()) == Greater);
-    REQUIRE(compare(mngr.top(), dd1) == Greater);
-    REQUIRE(compare(mngr.top(), dd2) == Greater);
-    REQUIRE(compare(dd1, mngr.top()) == Smaller);
-    REQUIRE(compare(dd2, mngr.top()) == Smaller);
-    REQUIRE(compare(dd1, dd2) == Different);
-    REQUIRE(compare(dd2, dd1) == Different);
+    REQUIRE(compare(mngr.bottom(), dd1) == lattice_compare::less);
+    REQUIRE(compare(mngr.bottom(), dd2) == lattice_compare::less);
+    REQUIRE(compare(dd1, mngr.bottom()) == lattice_compare::greater);
+    REQUIRE(compare(dd2, mngr.bottom()) == lattice_compare::greater);
+    REQUIRE(compare(mngr.top(), dd1) == lattice_compare::greater);
+    REQUIRE(compare(mngr.top(), dd2) == lattice_compare::greater);
+    REQUIRE(compare(dd1, mngr.top()) == lattice_compare::less);
+    REQUIRE(compare(dd2, mngr.top()) == lattice_compare::less);
+    REQUIRE(compare(dd1, dd2) == lattice_compare::unordered);
+    REQUIRE(compare(dd2, dd1) == lattice_compare::unordered);
 }
 
 TEST_CASE("traverse caching") {
@@ -227,21 +227,21 @@ TEST_CASE("operations 00") {
     // cout << endl << "dd_inter" << endl;
     // dd_inter.print(cout);
     REQUIRE(mngr.bottom() == dd_inter);
-    REQUIRE(compare(dd_inter, dd1) == Smaller);
-    REQUIRE(compare(dd1, dd_inter) == Greater);
-    REQUIRE(compare(dd_inter, dd2) == Smaller);
-    REQUIRE(compare(dd2, dd_inter) == Greater);
-    REQUIRE(compare(mngr.bottom(), dd_inter) == Equal);
+    REQUIRE(compare(dd_inter, dd1) == lattice_compare::less);
+    REQUIRE(compare(dd1, dd_inter) == lattice_compare::greater);
+    REQUIRE(compare(dd_inter, dd2) == lattice_compare::less);
+    REQUIRE(compare(dd2, dd_inter) == lattice_compare::greater);
+    REQUIRE(compare(mngr.bottom(), dd_inter) == lattice_compare::equivalent);
     //
     shared_ptr<idd<int, bool> const> dd_union = dd1 | dd2;
     // cout << endl << "dd_union" << endl;
     // dd_union.print(cout);
     REQUIRE(mngr.top() == dd_union);
-    REQUIRE(compare(dd_union, dd1) == Greater);
-    REQUIRE(compare(dd1, dd_union) == Smaller);
-    REQUIRE(compare(dd_union, dd2) == Greater);
-    REQUIRE(compare(dd2, dd_union) == Smaller);
-    REQUIRE(compare(mngr.top(), dd_union) == Equal);
+    REQUIRE(compare(dd_union, dd1) == lattice_compare::greater);
+    REQUIRE(compare(dd1, dd_union) == lattice_compare::less);
+    REQUIRE(compare(dd_union, dd2) == lattice_compare::greater);
+    REQUIRE(compare(dd2, dd_union) == lattice_compare::less);
+    REQUIRE(compare(mngr.top(), dd_union) == lattice_compare::equivalent);
 }
 
 TEST_CASE("operations 01") {
@@ -253,33 +253,33 @@ TEST_CASE("operations 01") {
     box[1] = make_tuple(-20, Closed, 10, Closed);
     shared_ptr<idd<int, bool> const> dd1 = mngr.from_box(box, true, false);
     shared_ptr<idd<int, bool> const> dd2 = mngr.from_box(box, false, true);
-    REQUIRE(compare(mngr.bottom(), dd1) == Smaller);
-    REQUIRE(compare(mngr.bottom(), dd2) == Smaller);
-    REQUIRE(compare(dd1, mngr.bottom()) == Greater);
-    REQUIRE(compare(dd2, mngr.bottom()) == Greater);
-    REQUIRE(compare(mngr.top(), dd1) == Greater);
-    REQUIRE(compare(mngr.top(), dd2) == Greater);
-    REQUIRE(compare(dd1, mngr.top()) == Smaller);
-    REQUIRE(compare(dd2, mngr.top()) == Smaller);
-    REQUIRE(compare(dd1, dd2) == Different);
-    REQUIRE(compare(dd2, dd1) == Different);
+    REQUIRE(compare(mngr.bottom(), dd1) == lattice_compare::less);
+    REQUIRE(compare(mngr.bottom(), dd2) == lattice_compare::less);
+    REQUIRE(compare(dd1, mngr.bottom()) == lattice_compare::greater);
+    REQUIRE(compare(dd2, mngr.bottom()) == lattice_compare::greater);
+    REQUIRE(compare(mngr.top(), dd1) == lattice_compare::greater);
+    REQUIRE(compare(mngr.top(), dd2) == lattice_compare::greater);
+    REQUIRE(compare(dd1, mngr.top()) == lattice_compare::less);
+    REQUIRE(compare(dd2, mngr.top()) == lattice_compare::less);
+    REQUIRE(compare(dd1, dd2) == lattice_compare::unordered);
+    REQUIRE(compare(dd2, dd1) == lattice_compare::unordered);
     //
     shared_ptr<idd<int, bool> const> dd_inter = dd1 & dd2;
     REQUIRE(mngr.bottom() == dd_inter);
     REQUIRE(mngr.bottom() == dd_inter);
-    REQUIRE(compare(dd_inter, dd1) == Smaller);
-    REQUIRE(compare(dd1, dd_inter) == Greater);
-    REQUIRE(compare(dd_inter, dd2) == Smaller);
-    REQUIRE(compare(dd2, dd_inter) == Greater);
-    REQUIRE(compare(mngr.bottom(), dd_inter) == Equal);
+    REQUIRE(compare(dd_inter, dd1) == lattice_compare::less);
+    REQUIRE(compare(dd1, dd_inter) == lattice_compare::greater);
+    REQUIRE(compare(dd_inter, dd2) == lattice_compare::less);
+    REQUIRE(compare(dd2, dd_inter) == lattice_compare::greater);
+    REQUIRE(compare(mngr.bottom(), dd_inter) == lattice_compare::equivalent);
     //
     shared_ptr<idd<int, bool> const> dd_union = dd1 | dd2;
     REQUIRE(mngr.top() == dd_union);
-    REQUIRE(compare(dd_union, dd1) == Greater);
-    REQUIRE(compare(dd1, dd_union) == Smaller);
-    REQUIRE(compare(dd_union, dd2) == Greater);
-    REQUIRE(compare(dd2, dd_union) == Smaller);
-    REQUIRE(compare(mngr.top(), dd_union) == Equal);
+    REQUIRE(compare(dd_union, dd1) == lattice_compare::greater);
+    REQUIRE(compare(dd1, dd_union) == lattice_compare::less);
+    REQUIRE(compare(dd_union, dd2) == lattice_compare::greater);
+    REQUIRE(compare(dd2, dd_union) == lattice_compare::less);
+    REQUIRE(compare(mngr.top(), dd_union) == lattice_compare::equivalent);
 }
 
 TEST_CASE("traverse combine caching") {

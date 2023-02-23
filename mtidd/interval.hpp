@@ -3,6 +3,7 @@
 #include <iostream>
 #include <limits>
 #include <tuple>
+#include <compare>
 
 namespace mtidd {
 
@@ -27,10 +28,7 @@ typedef std::tuple<double, interval_boundary> half_interval;
 bool ends_before(const half_interval &lhs, const half_interval &rhs);
 
 // lhs and rhs are the right/end of an interval
-bool operator<=(const half_interval &lhs, const half_interval &rhs);
-
-// lhs and rhs are the right/end of an interval
-bool operator<(const half_interval &lhs, const half_interval &rhs);
+std::partial_ordering operator<=>(const half_interval &lhs, const half_interval &rhs);
 
 bool contains(const half_interval &end, double value);
 

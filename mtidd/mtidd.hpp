@@ -80,8 +80,7 @@ class idd {
     // variable = null ⇒ part = null && terminal ≠ null
     // variable ≠ null ⇒ part ≠ null && terminal = null
 
-    typedef std::unordered_set<idd_t, // this is use for traversal not modification so it uses normal pointers not
-                                      // shared_ptr
+    typedef std::unordered_set<idd_t, // for traversal only, not modification
                                idd_hash<V, T, L>, idd_equalTo<V, T, L>>
         idd_set;
 
@@ -297,11 +296,11 @@ class idd {
 
     friend lattice_compare compare1(idd_t lhs, idd_t rhs, operation_cache<lattice_compare> &cache) {
         if (lhs.get() == rhs.get()) {
-            return Equal;
+            return lattice_compare::equivalent;
         } else if (cache.contains(lhs, rhs)) {
             return cache.lookup(lhs, rhs);
         } else {
-            lattice_compare result = Equal;
+            lattice_compare result = lattice_compare::equivalent;
             if (lhs->is_terminal()) {
                 if (rhs->is_terminal()) {
                     T const &left = lhs->manager->terminal_at(lhs->terminal_index);
@@ -314,8 +313,8 @@ class idd {
                 if (rhs->is_terminal() || lhs->variable_index < rhs->variable_index) {
                     for (auto iterator = lhs->part.begin(); iterator != lhs->part.end(); iterator++) {
                         idd_t child = std::get<1>(*iterator);
-                        result = result && compare1(child, rhs, cache);
-                        if (result == Different) {
+                        result = result & compare1(child, rhs, cache);
+                        if (result == lattice_compare::unordered) {
                             break;
                         }
                     }
@@ -324,7 +323,7 @@ class idd {
                 } else {
                     auto iterator_lhs = lhs->part.begin();
                     auto iterator_rhs = rhs->part.begin();
-                    while (result != Different &&
+                    while (result != lattice_compare::unordered &&
                            (iterator_lhs != lhs->part.end() || iterator_rhs != rhs->part.end())) {
                         // travers the partitions in parallel and recurse
                         // code copied and modified from merge_partition
@@ -333,7 +332,7 @@ class idd {
                         assert(iterator_lhs != lhs->part.end() && iterator_rhs != rhs->part.end());
 
                         idd_t child_lhs = std::get<1>(*iterator_lhs);
-                        result = result && compare1(child_lhs, std::get<1>(*iterator_rhs), cache);
+                        result = result & compare1(child_lhs, std::get<1>(*iterator_rhs), cache);
 
                         const half_interval &next_lhs = std::get<0>(*iterator_lhs);
                         const half_interval &next_rhs = std::get<0>(*iterator_rhs);
@@ -440,28 +439,28 @@ class idd {
     /* Compare (partial-order) two idds. */
     friend lattice_compare compare(idd_t lhs, idd_t rhs) {
         assert(lhs->manager == rhs->manager);
-        operation_cache<lattice_compare> cache(Different);
+        operation_cache<lattice_compare> cache(lattice_compare::unordered);
         return compare1(lhs, rhs, cache);
     }
 
     friend bool operator<(idd_t lhs, idd_t rhs) {
         lattice_compare c = compare(lhs, rhs);
-        return c == Smaller;
+        return c == lattice_compare::less;
     }
 
     friend bool operator<=(idd_t lhs, idd_t rhs) {
         lattice_compare c = compare(lhs, rhs);
-        return c == Smaller || c == Equal;
+        return c == lattice_compare::less || c == lattice_compare::equivalent;
     }
 
     friend bool operator>(idd_t lhs, idd_t rhs) {
         lattice_compare c = compare(lhs, rhs);
-        return c == Greater;
+        return c == lattice_compare::greater;
     }
 
     friend bool operator>=(idd_t lhs, idd_t rhs) {
         lattice_compare c = compare(lhs, rhs);
-        return c == Greater || c == Equal;
+        return c == lattice_compare::greater || c == lattice_compare::equivalent;
     }
 
     /* Given a value for each variable returns the corresponding terminal. */

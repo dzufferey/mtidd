@@ -1,18 +1,18 @@
 #pragma once
 
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 
 namespace mtidd {
 
-// comparison in a partial ordering
-typedef enum { Equal, Smaller, Greater, Different } lattice_compare;
+using lattice_compare = std::partial_ordering;
 
 lattice_compare flip(lattice_compare c);
 
-lattice_compare operator&&(lattice_compare lhs, lattice_compare rhs);
+lattice_compare operator&(lattice_compare lhs, lattice_compare rhs);
 
-lattice_compare operator||(lattice_compare lhs, lattice_compare rhs);
+lattice_compare operator|(lattice_compare lhs, lattice_compare rhs);
 
 // struct that contains the methods
 template <typename T> struct lattice {

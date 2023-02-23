@@ -1,39 +1,42 @@
 #include "lattice.hpp"
 
 #include <algorithm>
+#include <compare>
 #include <cstring>
 #include <limits>
+#include <bit>
 
 #include "utils.hpp"
 
 namespace mtidd {
 
 lattice_compare flip(lattice_compare c) {
-    if (c == Smaller)
-        return Greater;
-    else if (c == Greater)
-        return Smaller;
-    else
-        return c;
-}
-
-lattice_compare operator&&(lattice_compare lhs, lattice_compare rhs) {
-    if (lhs == rhs || rhs == Equal) {
-        return lhs;
-    } else if (lhs == Equal) {
-        return rhs;
+    if (c == lattice_compare::less) {
+        return lattice_compare::greater;
+    } else if (c == lattice_compare::greater) {
+        return lattice_compare::less;
     } else {
-        return Different;
+        return c;
     }
 }
 
-lattice_compare operator||(lattice_compare lhs, lattice_compare rhs) {
-    if (lhs == rhs || rhs == Different) {
+lattice_compare operator&(lattice_compare lhs, lattice_compare rhs) {
+    if (lhs == rhs || rhs == lattice_compare::equivalent) {
         return lhs;
-    } else if (lhs == Different) {
+    } else if (lhs == lattice_compare::equivalent) {
         return rhs;
     } else {
-        return Equal;
+        return lattice_compare::unordered;
+    }
+}
+
+lattice_compare operator|(lattice_compare lhs, lattice_compare rhs) {
+    if (lhs == rhs || rhs == lattice_compare::unordered) {
+        return lhs;
+    } else if (lhs == lattice_compare::unordered) {
+        return rhs;
+    } else {
+        return lattice_compare::equivalent;
     }
 }
 
@@ -46,11 +49,11 @@ bool lattice<bool>::greatest_lower_bound(const bool &x, const bool &y) const { r
 
 lattice_compare lattice<bool>::compare(const bool &x, const bool &y) const {
     if (x == y) {
-        return Equal;
+        return lattice_compare::equivalent;
     } else if (x) {
-        return Greater;
+        return lattice_compare::greater;
     } else {
-        return Smaller;
+        return lattice_compare::less;
     }
 }
 
@@ -68,13 +71,7 @@ int lattice<int>::least_upper_bound(const int &x, const int &y) const { return s
 int lattice<int>::greatest_lower_bound(const int &x, const int &y) const { return std::min(x, y); }
 
 lattice_compare lattice<int>::compare(const int &x, const int &y) const {
-    if (x == y) {
-        return Equal;
-    } else if (x > y) {
-        return Greater;
-    } else {
-        return Smaller;
-    }
+    return x <=> y;
 }
 
 bool lattice<int>::equal(const int &x, const int &y) const { return x == y; }
@@ -90,13 +87,7 @@ long lattice<long>::least_upper_bound(const long &x, const long &y) const { retu
 long lattice<long>::greatest_lower_bound(const long &x, const long &y) const { return std::min(x, y); }
 
 lattice_compare lattice<long>::compare(const long &x, const long &y) const {
-    if (x == y) {
-        return Equal;
-    } else if (x > y) {
-        return Greater;
-    } else {
-        return Smaller;
-    }
+    return x <=> y;
 }
 
 bool lattice<long>::equal(const long &x, const long &y) const { return x == y; }
@@ -115,13 +106,7 @@ float lattice<float>::least_upper_bound(const float &x, const float &y) const { 
 float lattice<float>::greatest_lower_bound(const float &x, const float &y) const { return std::min(x, y); }
 
 lattice_compare lattice<float>::compare(const float &x, const float &y) const {
-    if (x == y) {
-        return Equal;
-    } else if (x > y) {
-        return Greater;
-    } else {
-        return Smaller;
-    }
+    return x <=> y;
 }
 
 bool lattice<float>::equal(const float &x, const float &y) const { return x == y; }
@@ -130,8 +115,7 @@ bool lattice<float>::equal(const float &x, const float &y) const { return x == y
 size_t lattice<float>::hash(const float &x) const {
     static_assert(sizeof(double) == sizeof(long), "expecting long and double to have the same size");
     double d = x;
-    long l;
-    memcpy(&l, &d, sizeof(l)); // this is needed to go around strict-aliasing rules
+    long l = std::bit_cast<long>(d);
     return mhash(l);
 }
 
@@ -144,20 +128,14 @@ double lattice<double>::least_upper_bound(const double &x, const double &y) cons
 double lattice<double>::greatest_lower_bound(const double &x, const double &y) const { return std::min(x, y); }
 
 lattice_compare lattice<double>::compare(const double &x, const double &y) const {
-    if (x == y) {
-        return Equal;
-    } else if (x > y) {
-        return Greater;
-    } else {
-        return Smaller;
-    }
+    return x <=> y;
 }
 
 bool lattice<double>::equal(const double &x, const double &y) const { return x == y; }
 
 size_t lattice<double>::hash(const double &x) const {
-    static_assert(sizeof(double) == 8, "expecting double to be 64 bits");
-    long l = *(reinterpret_cast<const long *>(&x));
+    static_assert(sizeof(double) == sizeof(long), "expecting double and long to have the same size");
+    long l = std::bit_cast<long>(x);
     return mhash(l);
 }
 

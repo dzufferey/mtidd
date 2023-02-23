@@ -47,7 +47,7 @@ class cache {
 
     void insert(Aref lhs, Aref rhs, R result) {
         key_t entry = mk_entry(lhs, rhs);
-        map[entry] = result;
+        map.emplace(entry, result);
     }
 };
 

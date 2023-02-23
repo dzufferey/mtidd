@@ -9,42 +9,42 @@ using namespace std;
 namespace mtidd {
 
 TEST_CASE("lattice_compare") {
-    REQUIRE(flip(Equal) == Equal);
-    REQUIRE(flip(Different) == Different);
-    REQUIRE(flip(Smaller) == Greater);
-    REQUIRE(flip(Greater) == Smaller);
-    REQUIRE((Equal && Equal) == Equal);
-    REQUIRE((Equal && Greater) == Greater);
-    REQUIRE((Equal && Smaller) == Smaller);
-    REQUIRE((Equal && Different) == Different);
-    REQUIRE((Greater && Equal) == Greater);
-    REQUIRE((Greater && Greater) == Greater);
-    REQUIRE((Greater && Smaller) == Different);
-    REQUIRE((Greater && Different) == Different);
-    REQUIRE((Smaller && Equal) == Smaller);
-    REQUIRE((Smaller && Greater) == Different);
-    REQUIRE((Smaller && Smaller) == Smaller);
-    REQUIRE((Smaller && Different) == Different);
-    REQUIRE((Different && Equal) == Different);
-    REQUIRE((Different && Greater) == Different);
-    REQUIRE((Different && Smaller) == Different);
-    REQUIRE((Different && Different) == Different);
-    REQUIRE((Equal || Equal) == Equal);
-    REQUIRE((Equal || Greater) == Equal);
-    REQUIRE((Equal || Smaller) == Equal);
-    REQUIRE((Equal || Different) == Equal);
-    REQUIRE((Greater || Equal) == Equal);
-    REQUIRE((Greater || Greater) == Greater);
-    REQUIRE((Greater || Smaller) == Equal);
-    REQUIRE((Greater || Different) == Greater);
-    REQUIRE((Smaller || Equal) == Equal);
-    REQUIRE((Smaller || Greater) == Equal);
-    REQUIRE((Smaller || Smaller) == Smaller);
-    REQUIRE((Smaller || Different) == Smaller);
-    REQUIRE((Different || Equal) == Equal);
-    REQUIRE((Different || Greater) == Greater);
-    REQUIRE((Different || Smaller) == Smaller);
-    REQUIRE((Different || Different) == Different);
+    REQUIRE(flip(lattice_compare::equivalent) == lattice_compare::equivalent);
+    REQUIRE(flip(lattice_compare::unordered) == lattice_compare::unordered);
+    REQUIRE(flip(lattice_compare::less) == lattice_compare::greater);
+    REQUIRE(flip(lattice_compare::greater) == lattice_compare::less);
+    REQUIRE((lattice_compare::equivalent & lattice_compare::equivalent) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::equivalent & lattice_compare::greater) == lattice_compare::greater);
+    REQUIRE((lattice_compare::equivalent & lattice_compare::less) == lattice_compare::less);
+    REQUIRE((lattice_compare::equivalent & lattice_compare::unordered) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::greater & lattice_compare::equivalent) == lattice_compare::greater);
+    REQUIRE((lattice_compare::greater & lattice_compare::greater) == lattice_compare::greater);
+    REQUIRE((lattice_compare::greater & lattice_compare::less) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::greater & lattice_compare::unordered) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::less & lattice_compare::equivalent) == lattice_compare::less);
+    REQUIRE((lattice_compare::less & lattice_compare::greater) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::less & lattice_compare::less) == lattice_compare::less);
+    REQUIRE((lattice_compare::less & lattice_compare::unordered) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::unordered & lattice_compare::equivalent) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::unordered & lattice_compare::greater) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::unordered & lattice_compare::less) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::unordered & lattice_compare::unordered) == lattice_compare::unordered);
+    REQUIRE((lattice_compare::equivalent | lattice_compare::equivalent) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::equivalent | lattice_compare::greater) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::equivalent | lattice_compare::less) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::equivalent | lattice_compare::unordered) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::greater | lattice_compare::equivalent) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::greater | lattice_compare::greater) == lattice_compare::greater);
+    REQUIRE((lattice_compare::greater | lattice_compare::less) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::greater | lattice_compare::unordered) == lattice_compare::greater);
+    REQUIRE((lattice_compare::less | lattice_compare::equivalent) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::less | lattice_compare::greater) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::less | lattice_compare::less) == lattice_compare::less);
+    REQUIRE((lattice_compare::less | lattice_compare::unordered) == lattice_compare::less);
+    REQUIRE((lattice_compare::unordered | lattice_compare::equivalent) == lattice_compare::equivalent);
+    REQUIRE((lattice_compare::unordered | lattice_compare::greater) == lattice_compare::greater);
+    REQUIRE((lattice_compare::unordered | lattice_compare::less) == lattice_compare::less);
+    REQUIRE((lattice_compare::unordered | lattice_compare::unordered) == lattice_compare::unordered);
 }
 
 TEST_CASE("boolean lattice") {
@@ -63,10 +63,10 @@ TEST_CASE("boolean lattice") {
     REQUIRE(!b.equal(true, false));
     REQUIRE(!b.equal(false, true));
     REQUIRE(b.equal(false, false));
-    REQUIRE(b.compare(true, true) == Equal);
-    REQUIRE(b.compare(true, false) == Greater);
-    REQUIRE(b.compare(false, true) == Smaller);
-    REQUIRE(b.compare(false, false) == Equal);
+    REQUIRE(b.compare(true, true) == lattice_compare::equivalent);
+    REQUIRE(b.compare(true, false) == lattice_compare::greater);
+    REQUIRE(b.compare(false, true) == lattice_compare::less);
+    REQUIRE(b.compare(false, false) == lattice_compare::equivalent);
     REQUIRE(b.hash(true) != b.hash(false));
 }
 
